@@ -1,6 +1,14 @@
 @using Playlist.Models
 @model Playlist
 
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Playlist" asp-action="Index">Playlists</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+    </ol>
+</nav>
+
 <h1>@Model.Name</h1>
 
 <p><strong>Description:</strong> @Model.Description</p>

@@ -283,6 +283,35 @@ main.pb-3 {
   color: #a3f2ff;
 }
 
+.breadcrumb {
+  background: transparent;
+  padding: 0;
+  margin-bottom: 1.5rem;
+}
+
+.breadcrumb-item {
+  color: rgba(231, 238, 252, 0.7);
+}
+
+.breadcrumb-item a {
+  color: #7ee2ff;
+  text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+  color: #a3f2ff;
+  text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+  color: #f2f8ff;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  content: ">";
+  color: rgba(231, 238, 252, 0.5);
+}
+
 .hero-section {
   text-align: center;
   padding: 4rem 2rem;
@@ -353,12 +382,13 @@ main.pb-3 {
 .btn-outline {
   background: transparent;
   color: #7ee2ff;
-  border: 1px solid #7ee2ff;
+  border: 1px solid rgba(126, 226, 255, 0.45);
 }
 
 .btn-outline:hover {
-  background: rgba(126, 226, 255, 0.1);
+  background: rgba(126, 226, 255, 0.08);
   color: #a3f2ff;
+  border-color: rgba(126, 226, 255, 0.65);
 }
 
 .top-songs-section,

@@ -1,5 +1,13 @@
 @model Artist
 
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Artist" asp-action="Index">Artists</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.StageName</li>
+    </ol>
+</nav>
+
 <h1>@Model.StageName</h1>
 
 <p><strong>Country:</strong> @Model.Country</p>

@@ -1,5 +1,13 @@
 @model User
 
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="User" asp-action="Index">Users</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Username</li>
+    </ol>
+</nav>
+
 <h1>@Model.Username</h1>
 
 <p><strong>Email:</strong> @Model.Email</p>
