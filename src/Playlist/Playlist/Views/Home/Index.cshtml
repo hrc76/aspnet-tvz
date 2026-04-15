@@ -1,8 +1,49 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">MusicBar</h1>
+        <p class="hero-subtitle">Discover your next favorite song</p>
+        <div class="hero-actions">
+            <a asp-controller="Playlist" asp-action="Index" class="btn btn-secondary">Browse Playlists</a>
+            <a asp-controller="Song" asp-action="Index" class="btn btn-secondary">Browse Songs</a>
+        </div>
+    </div>
+</section>
+
+<section class="top-songs-section">
+    <h2>Top Songs</h2>
+    <div class="songs-grid">
+        @if (ViewBag.TopSongs != null)
+        {
+            foreach (var song in ViewBag.TopSongs)
+            {
+                <div class="song-card">
+                    <h3>@song.Title</h3>
+                    <p>@song.Artist.StageName</p>
+                    <span>@song.PlayCount plays</span>
+                    <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId" class="btn btn-outline">Listen Now</a>
+                </div>
+            }
+        }
+    </div>
+</section>
+
+<section class="featured-artists-section">
+    <h2>Featured Artists</h2>
+    <div class="artists-grid">
+        @if (ViewBag.FeaturedArtists != null)
+        {
+            foreach (var artist in ViewBag.FeaturedArtists)
+            {
+                <div class="artist-card">
+                    <h3>@artist.StageName</h3>
+                    <p>@artist.Country</p>
+                    <a asp-controller="Artist" asp-action="Details" asp-route-id="@artist.ArtistId" class="btn btn-outline">View Details</a>
+                </div>
+            }
+        }
+    </div>
+</section>

@@ -1,0 +1,51 @@
+@model User
+
+<h1>@Model.Username</h1>
+
+<p><strong>Email:</strong> @Model.Email</p>
+<p><strong>Registration Date:</strong> @Model.RegistrationDate.ToShortDateString()</p>
+<p><strong>Favorite Genre:</strong> @Model.FavoriteGenreName</p>
+<p><strong>Premium:</strong> @(Model.IsPremium ? "Yes" : "No")</p>
+
+<h2>Playlists</h2>
+@if (Model.Playlists != null && Model.Playlists.Any())
+{
+    <ul>
+        @foreach (var playlist in Model.Playlists)
+        {
+            <li>
+                <a asp-controller="Playlist" asp-action="Details" asp-route-id="@playlist.PlaylistId">
+                    @playlist.Name
+                </a>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No playlists available.</p>
+}
+
+<h2>Listening History</h2>
+@if (Model.ListeningHistory != null && Model.ListeningHistory.Any())
+{
+    <ul>
+        @foreach (var history in Model.ListeningHistory)
+        {
+            <li>
+                <a asp-controller="ListeningHistory" asp-action="Details" asp-route-id="@history.ListeningHistoryId">
+                    @history.Song.Title
+                </a>
+                - listened at @history.ListenedAt
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No listening history available.</p>
+}
+
+<p>
+    <a asp-controller="User" asp-action="Index">Back to Users</a>
+</p>

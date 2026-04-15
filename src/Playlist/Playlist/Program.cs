@@ -1,9 +1,17 @@
 using Playlist;
+using Playlist.MockRepositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSingleton<SongMockRepository>();
+builder.Services.AddSingleton<ArtistMockRepository>();
+builder.Services.AddSingleton<AlbumMockRepository>();
+builder.Services.AddSingleton<GenreMockRepository>();
+builder.Services.AddSingleton<PlaylistMockRepository>();
+builder.Services.AddSingleton<UserMockRepository>();
+builder.Services.AddSingleton<ListeningHistoryMockRepository>();
 
 var app = builder.Build();
 

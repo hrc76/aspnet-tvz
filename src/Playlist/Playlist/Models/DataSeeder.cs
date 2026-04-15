@@ -4,7 +4,15 @@ namespace Playlist
 {
     public static class DataSeeder
     {
-        public static (List<Song> Songs, List<Artist> Artists, List<Models.Playlist> Playlists, List<User> Users) Seed()
+        public static (
+        List<Song> Songs,
+        List<Artist> Artists,
+        List<Album> Albums,
+        List<Genre> Genres,
+        List<Models.Playlist> Playlists,
+        List<User> Users,
+        List<ListeningHistory> ListeningHistories
+             ) Seed()
         {
             //  GENRES 
             var sludge = new Genre
@@ -513,7 +521,21 @@ namespace Playlist
                 user1, user2
             };
 
-            return (allSongs, allArtists, allPlaylists, allUsers);
+            var allAlbums = new List<Album>
+            {
+                album1, album2, album3, album4, album5, album6, album7, album8, album9
+            };
+
+            var allGenres = new List<Genre>
+            {
+                sludge, hipHop, techno
+    };
+
+            var allListeningHistories = new List<ListeningHistory>
+            {
+                history1, history2, history3
+            };
+            return (allSongs, allArtists, allAlbums, allGenres, allPlaylists, allUsers, allListeningHistories);
         }
     }
 }

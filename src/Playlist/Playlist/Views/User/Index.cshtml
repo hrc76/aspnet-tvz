@@ -1,0 +1,33 @@
+@model List<User>
+
+<h1>Users</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Registration Date</th>
+            <th>Favorite Genre</th>
+            <th>Premium</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Username</td>
+                <td>@user.Email</td>
+                <td>@user.RegistrationDate.ToShortDateString()</td>
+                <td>@user.FavoriteGenreName</td>
+                <td>@(user.IsPremium ? "Yes" : "No")</td>
+                <td>
+                    <a asp-controller="User" asp-action="Details" asp-route-id="@user.UserId">
+                        Details
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

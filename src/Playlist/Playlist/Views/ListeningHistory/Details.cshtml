@@ -1,0 +1,24 @@
+@model ListeningHistory
+
+<h1>Listening History Details</h1>
+
+<p>
+    <strong>User:</strong>
+    <a asp-controller="User" asp-action="Details" asp-route-id="@Model.User.UserId">
+        @Model.User.Username
+    </a>
+</p>
+
+<p>
+    <strong>Song:</strong>
+    <a asp-controller="Song" asp-action="Details" asp-route-id="@Model.Song.SongId">
+        @Model.Song.Title
+    </a>
+</p>
+
+<p><strong>Listened At:</strong> @Model.ListenedAt</p>
+<p><strong>Repeats:</strong> @Model.Repeats</p>
+
+<p>
+    <a asp-controller="ListeningHistory" asp-action="Index">Back to Listening History</a>
+</p>

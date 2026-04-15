@@ -1,0 +1,50 @@
+@model Artist
+
+<h1>@Model.StageName</h1>
+
+<p><strong>Country:</strong> @Model.Country</p>
+<p><strong>Debut Date:</strong> @Model.DebutDate.ToShortDateString()</p>
+<p><strong>Biography:</strong> @Model.Biography</p>
+<p><strong>Active:</strong> @(Model.IsActive ? "Yes" : "No")</p>
+
+<h2>Albums</h2>
+@if (Model.Albums != null && Model.Albums.Any())
+{
+    <ul>
+        @foreach (var album in Model.Albums)
+        {
+            <li>
+                <a asp-controller="Album" asp-action="Details" asp-route-id="@album.AlbumId">
+                    @album.Title
+                </a>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No albums available.</p>
+}
+
+<h2>Songs</h2>
+@if (Model.Songs != null && Model.Songs.Any())
+{
+    <ul>
+        @foreach (var song in Model.Songs)
+        {
+            <li>
+                <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId">
+                    @song.Title
+                </a>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No songs available.</p>
+}
+
+<p>
+    <a asp-controller="Artist" asp-action="Index">Back to Artists</a>
+</p>

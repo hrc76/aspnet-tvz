@@ -1,0 +1,31 @@
+@model List<Artist>
+
+<h1>Artists</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Stage Name</th>
+            <th>Country</th>
+            <th>Debut Date</th>
+            <th>Active</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var artist in Model)
+        {
+            <tr>
+                <td>@artist.StageName</td>
+                <td>@artist.Country</td>
+                <td>@artist.DebutDate.ToShortDateString()</td>
+                <td>@(artist.IsActive ? "Yes" : "No")</td>
+                <td>
+                    <a asp-controller="Artist" asp-action="Details" asp-route-id="@artist.ArtistId">
+                        Details
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

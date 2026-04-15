@@ -1,0 +1,33 @@
+@model List<Album>
+
+<h1>Albums</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Artist</th>
+            <th>Release Date</th>
+            <th>Label</th>
+            <th>Rating</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var album in Model)
+        {
+            <tr>
+                <td>@album.Title</td>
+                <td>@album.Artist.StageName</td>
+                <td>@album.ReleaseDate.ToShortDateString()</td>
+                <td>@album.Label</td>
+                <td>@album.Rating</td>
+                <td>
+                    <a asp-controller="Album" asp-action="Details" asp-route-id="@album.AlbumId">
+                        Details
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

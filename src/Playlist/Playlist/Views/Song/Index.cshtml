@@ -1,0 +1,31 @@
+@model List<Song>
+
+<h1>Songs</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Artist</th>
+            <th>Genre</th>
+            <th>Duration</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var s in Model)
+        {
+            <tr>
+                <td>@s.Title</td>
+                <td>@s.Artist.StageName</td>
+                <td>@s.Genre.Name</td>
+                <td>@s.Duration</td>
+                <td>
+                    <a asp-controller="Song" asp-action="Details" asp-route-id="@s.SongId">
+                        Details
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

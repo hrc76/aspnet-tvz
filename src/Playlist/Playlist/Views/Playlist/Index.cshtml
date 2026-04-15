@@ -1,0 +1,33 @@
+@model List<Playlist>
+
+<h1>Playlists</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>Created At</th>
+            <th>Public</th>
+            <th>Likes</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var playlist in Model)
+        {
+            <tr>
+                <td>@playlist.Name</td>
+                <td>@playlist.Owner.Username</td>
+                <td>@playlist.CreatedAt.ToShortDateString()</td>
+                <td>@(playlist.IsPublic ? "Yes" : "No")</td>
+                <td>@playlist.Likes</td>
+                <td>
+                    <a asp-controller="Playlist" asp-action="Details" asp-route-id="@playlist.PlaylistId">
+                        Details
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,31 @@
+@model List<ListeningHistory>
+
+<h1>Listening History</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Song</th>
+            <th>Listened At</th>
+            <th>Repeats</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var history in Model)
+        {
+            <tr>
+                <td>@history.User.Username</td>
+                <td>@history.Song.Title</td>
+                <td>@history.ListenedAt</td>
+                <td>@history.Repeats</td>
+                <td>
+                    <a asp-controller="ListeningHistory" asp-action="Details" asp-route-id="@history.ListeningHistoryId">
+                        Details
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

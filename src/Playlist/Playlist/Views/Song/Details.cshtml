@@ -1,0 +1,17 @@
+@model Song
+
+<h1>@Model.Title</h1>
+
+<p><strong>Artist:</strong> @Model.Artist.StageName</p>
+<p><strong>Genre:</strong> @Model.Genre.Name</p>
+<p><strong>Album:</strong> @Model.Album.Title</p>
+<p><strong>Duration:</strong> @Model.Duration</p>
+<p><strong>Release Date:</strong> @Model.ReleaseDate.ToShortDateString()</p>
+<p><strong>Play Count:</strong> @Model.PlayCount</p>
+<p><strong>Popularity Score:</strong> @Model.PopularityScore</p>
+<p><strong>Mood:</strong> @Model.Mood</p>
+<p><strong>Explicit:</strong> @(Model.IsExplicit ? "Yes" : "No")</p>
+
+<p>
+    <a asp-controller="Song" asp-action="Index">Back to Songs</a>
+</p>

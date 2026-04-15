@@ -1,0 +1,30 @@
+@model Genre
+
+<h1>@Model.Name</h1>
+
+<p><strong>Description:</strong> @Model.Description</p>
+<p><strong>Number of Songs:</strong> @Model.Songs.Count</p>
+
+<h2>Songs</h2>
+@if (Model.Songs != null && Model.Songs.Any())
+{
+    <ul>
+        @foreach (var song in Model.Songs)
+        {
+            <li>
+                <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId">
+                    @song.Title
+                </a>
+                - @song.Artist.StageName
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No songs available for this genre.</p>
+}
+
+<p>
+    <a asp-controller="Genre" asp-action="Index">Back to Genres</a>
+</p>
