@@ -1,49 +1,107 @@
-@using Playlist.Models
-@model Playlist
+@model global::Playlist.Models.Playlist
 
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-        <li class="breadcrumb-item"><a asp-controller="Playlist" asp-action="Index">Playlists</a></li>
-        <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
-    </ol>
+@{
+    ViewData["Title"] = Model.Name;
+
+    string coverName = Model.Name.Replace(" ", "") + ".jpg";
+}
+
+<nav aria-label="breadcrumb" class="mb-breadcrumb">
+    <a asp-controller="Home" asp-action="Index">Home</a>
+    <span>/</span>
+    <a asp-controller="Library" asp-action="Index">Library</a>
+    <span>/</span>
+    <span>@Model.Name</span>
 </nav>
 
-<h1>@Model.Name</h1>
+<section class="playlist-hero">
+    <div class="playlist-cover">
+        <img src="~/images/playlists/@coverName"
+             alt="@Model.Name cover"
+             onerror="this.src='/images/albums/placeholder.jpg'" />
+    </div>
 
-<p><strong>Description:</strong> @Model.Description</p>
+    <div class="playlist-info">
+        <p class="mb-eyebrow">Playlist</p>
 
-<p>
-    <strong>Owner:</strong>
-    <a asp-controller="User" asp-action="Details" asp-route-id="@Model.Owner.UserId">
-        @Model.Owner.Username
-    </a>
-</p>
+        <h1>@Model.Name</h1>
 
-<p><strong>Created At:</strong> @Model.CreatedAt.ToShortDateString()</p>
-<p><strong>Public:</strong> @(Model.IsPublic ? "Yes" : "No")</p>
-<p><strong>Likes:</strong> @Model.Likes</p>
+        <p class="playlist-owner">
+            Created by
+            <a asp-controller="User"
+               asp-action="Details"
+               asp-route-id="@Model.Owner.UserId">
+                @Model.Owner.Username
+            </a>
+        </p>
 
-<h2>Songs</h2>
-@if (Model.Songs != null && Model.Songs.Any())
-{
-    <ul>
-        @foreach (var song in Model.Songs)
-        {
-            <li>
-                <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId">
-                    @song.Title
+        <div class="playlist-meta">
+            <span>@(Model.IsPublic ? "Public" : "Private")</span>
+            <span>@Model.Songs.Count songs</span>
+        </div>
+
+        <div class="record-actions">
+            <a asp-controller="Song"
+               asp-action="Index"
+               class="mb-btn mb-btn-primary">
+                Play Playlist
+            </a>
+
+            <a asp-controller="Library"
+               asp-action="Index"
+               class="mb-btn mb-btn-ghost">
+                Save to Library
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="record-tracklist">
+    <div class="mb-section-header">
+        <div>
+            <p class="mb-eyebrow">Tracklist</p>
+            <h2>Songs in this playlist</h2>
+        </div>
+    </div>
+
+    @if (Model.Songs != null && Model.Songs.Any())
+    {
+        <div class="tracklist">
+            @{
+                var index = 1;
+            }
+
+            @foreach (var song in Model.Songs)
+            {
+                <a asp-controller="Song"
+                   asp-action="Details"
+                   asp-route-id="@song.SongId"
+                   class="track-row">
+
+                    <span class="track-number">@index</span>
+
+                    <div class="track-main">
+                        <h3>@song.Title</h3>
+                        <p>@song.Artist.StageName · @song.Genre.Name</p>
+                    </div>
+
+                    <span class="track-duration">@song.Duration</span>
                 </a>
-                - @song.Artist.StageName
-            </li>
-        }
-    </ul>
-}
-else
-{
-    <p>No songs in this playlist.</p>
-}
 
-<p>
-    <a asp-controller="Playlist" asp-action="Index">Back to Playlists</a>
+                index++;
+            }
+        </div>
+    }
+    else
+    {
+        <p>No songs in this playlist.</p>
+    }
+</section>
+
+<p class="mt-4">
+    <a asp-controller="Library"
+       asp-action="Index"
+       class="mb-btn mb-btn-ghost">
+        Back to Library
+    </a>
 </p>

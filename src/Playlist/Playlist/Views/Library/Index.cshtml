@@ -1,0 +1,82 @@
+@using Playlist.ViewModels
+@model LibraryViewModel
+
+@{
+    ViewData["Title"] = "Library";
+}
+
+<section class="library-hero">
+    <p class="mb-eyebrow">Your collection</p>
+    <h1>Library</h1>
+    <p>Favorite songs, saved albums and playlists in one place.</p>
+
+    <div class="library-tools">
+        <input type="text" placeholder="Search your library..." />
+        <button>All</button>
+        <button>Albums</button>
+        <button>Playlists</button>
+        <button>A-Z</button>
+    </div>
+</section>
+
+<section class="mb-section">
+    <div class="mb-section-header">
+        <div>
+            <p class="mb-eyebrow">Pinned tracks</p>
+            <h2>Favorite Songs</h2>
+        </div>
+    </div>
+
+    <div class="mb-song-list">
+        @foreach (var song in Model.FavoriteSongs)
+        {
+            <article class="mb-song-row">
+                <div class="mb-play-dot">▶</div>
+
+                <div>
+                    <h3>@song.Title</h3>
+                    <p>@song.Artist.StageName · @song.Genre.Name · @song.Duration</p>
+                </div>
+
+                <span>@song.PlayCount plays</span>
+
+                <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId">
+                    Listen
+                </a>
+            </article>
+        }
+    </div>
+</section>
+
+<section class="mb-section">
+    <div class="mb-section-header">
+        <div>
+            <p class="mb-eyebrow">Saved items</p>
+            <h2>Albums & Playlists</h2>
+        </div>
+
+        <a href="#">+ Create Playlist</a>
+    </div>
+
+    <div class="library-grid">
+        @foreach (var item in Model.LibraryItems)
+        {
+            <a asp-controller="@item.ControllerName"
+               asp-action="Details"
+               asp-route-id="@item.Id"
+               class="library-card">
+
+                <img src="@item.ImagePath"
+                     alt="@item.Title"
+                     onerror="this.src='/images/albums/placeholder.jpg'" />
+
+                <div class="library-card-body">
+                    <span class="library-type">@item.Type</span>
+                    <h3>@item.Title</h3>
+                    <p>@item.Subtitle</p>
+                    <small>@item.Meta</small>
+                </div>
+            </a>
+        }
+    </div>
+</section>

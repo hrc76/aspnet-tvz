@@ -1,25 +1,96 @@
 @model Song
 
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-        <li class="breadcrumb-item"><a asp-controller="Song" asp-action="Index">Songs</a></li>
-        <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
-    </ol>
+@{
+    ViewData["Title"] = Model.Title;
+    string coverName = Model.Album.Title.Replace(" ", "") + ".jpg";
+}
+
+<nav aria-label="breadcrumb" class="mb-breadcrumb">
+    <a asp-controller="Home" asp-action="Index">Home</a>
+    <span>/</span>
+    <a asp-controller="Library" asp-action="Index">Library</a>
+    <span>/</span>
+    <a asp-controller="Album" asp-action="Details" asp-route-id="@Model.Album.AlbumId">@Model.Album.Title</a>
+    <span>/</span>
+    <span>@Model.Title</span>
 </nav>
 
-<h1>@Model.Title</h1>
+<section class="song-player-hero">
+    <div class="song-cover">
+        <img src="~/images/albums/@coverName"
+             alt="@Model.Album.Title cover"
+             onerror="this.src='/images/albums/placeholder.jpg'" />
+    </div>
 
-<p><strong>Artist:</strong> @Model.Artist.StageName</p>
-<p><strong>Genre:</strong> @Model.Genre.Name</p>
-<p><strong>Album:</strong> @Model.Album.Title</p>
-<p><strong>Duration:</strong> @Model.Duration</p>
-<p><strong>Release Date:</strong> @Model.ReleaseDate.ToShortDateString()</p>
-<p><strong>Play Count:</strong> @Model.PlayCount</p>
-<p><strong>Popularity Score:</strong> @Model.PopularityScore</p>
-<p><strong>Mood:</strong> @Model.Mood</p>
-<p><strong>Explicit:</strong> @(Model.IsExplicit ? "Yes" : "No")</p>
+    <div class="song-player-info">
+        <p class="mb-eyebrow">Now playing</p>
+        <h1>@Model.Title</h1>
 
-<p>
-    <a asp-controller="Song" asp-action="Index">Back to Songs</a>
+        <p class="song-byline">
+            by
+            <a asp-controller="Artist" asp-action="Details" asp-route-id="@Model.Artist.ArtistId">
+                @Model.Artist.StageName
+            </a>
+            from
+            <a asp-controller="Album" asp-action="Details" asp-route-id="@Model.Album.AlbumId">
+                @Model.Album.Title
+            </a>
+        </p>
+
+        <div class="song-meta-row">
+            <span>@Model.Genre.Name</span>
+            <span>@Model.Mood</span>
+            <span>@Model.Duration</span>
+            <span>@Model.PlayCount plays</span>
+            <span>@Model.PopularityScore score</span>
+            <span>@(Model.IsExplicit ? "Explicit" : "Clean")</span>
+        </div>
+
+        <div class="fake-audio-player">
+            <button type="button">▶</button>
+            <div class="fake-wave">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <small>@Model.Duration</small>
+        </div>
+
+        <div class="record-actions">
+            <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-primary">Add to Favorites</a>
+            <a asp-controller="Playlist" asp-action="Index" class="mb-btn mb-btn-ghost">Add to Playlist</a>
+        </div>
+    </div>
+</section>
+
+<section class="song-context-grid">
+    <article class="song-context-card">
+        <p class="mb-eyebrow">Artist</p>
+        <h2>@Model.Artist.StageName</h2>
+        <p>@Model.Artist.Country · @(Model.Artist.IsActive ? "Active" : "Inactive")</p>
+        <a asp-controller="Artist" asp-action="Details" asp-route-id="@Model.Artist.ArtistId">
+            Open artist page
+        </a>
+    </article>
+
+    <article class="song-context-card">
+        <p class="mb-eyebrow">Album</p>
+        <h2>@Model.Album.Title</h2>
+        <p>@Model.Album.ReleaseDate.Year · @Model.Album.Label · @Model.Album.Rating ★</p>
+        <a asp-controller="Album" asp-action="Details" asp-route-id="@Model.Album.AlbumId">
+            Open album
+        </a>
+    </article>
+
+    <article class="song-context-card">
+        <p class="mb-eyebrow">Genre</p>
+        <h2>@Model.Genre.Name</h2>
+        <p>@Model.Genre.Description</p>
+        <a asp-controller="Genre" asp-action="Details" asp-route-id="@Model.Genre.GenreId">
+            Explore genre
+        </a>
+    </article>
+</section>
+
+<p class="mt-4">
+    <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Back to Library</a>
 </p>

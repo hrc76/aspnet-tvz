@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Playlist.MockRepositories;
+using Playlist.Repositories;
 
 namespace Playlist.Controllers
 {
     public class ListeningHistoryController : Controller
     {
-        private readonly ListeningHistoryMockRepository _listeningHistoryRepository;
+        private readonly ListeningHistoryRepository _listeningHistoryRepository;
 
-        public ListeningHistoryController(ListeningHistoryMockRepository listeningHistoryRepository)
+        public ListeningHistoryController(ListeningHistoryRepository listeningHistoryRepository)
         {
             _listeningHistoryRepository = listeningHistoryRepository;
         }

@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Playlist.MockRepositories;
+using Playlist.Repositories;
 
 namespace Playlist.Controllers
 {
     public class UserController : Controller
     {
-        private readonly UserMockRepository _userRepository;
+        private readonly UserRepository _userRepository;
 
-        public UserController(UserMockRepository userRepository)
+        public UserController(UserRepository userRepository)
         {
             _userRepository = userRepository;
         }

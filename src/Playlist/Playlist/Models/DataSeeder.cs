@@ -175,7 +175,7 @@ namespace Playlist
             var album5 = new Album
             {
                 AlbumId = 5,
-                Title = "Which Doobie U B?",
+                Title = "Which Doobie U B",
                 ReleaseDate = new DateTime(1992, 7, 28),
                 Label = "Epic Records",
                 TotalTracks = 1,
@@ -393,9 +393,17 @@ namespace Playlist
             album8.Songs.Add(song8);
             album9.Songs.Add(song9);
 
-            sludge.Songs.AddRange(new List<Song> { song1, song2, song3 });
-            hipHop.Songs.AddRange(new List<Song> { song4, song5, song6 });
-            techno.Songs.AddRange(new List<Song> { song7, song8, song9 });
+            sludge.Songs.Add(song1);
+            sludge.Songs.Add(song2);
+            sludge.Songs.Add(song3);
+
+            hipHop.Songs.Add(song4);
+            hipHop.Songs.Add(song5);
+            hipHop.Songs.Add(song6);
+
+            techno.Songs.Add(song7);
+            techno.Songs.Add(song8);
+            techno.Songs.Add(song9);
 
             //  USERS 
             var user1 = new User
@@ -452,9 +460,17 @@ namespace Playlist
                 Owner = user1
             };
 
-            playlist1.Songs.AddRange(new List<Song> { song1, song2, song3 });
-            playlist2.Songs.AddRange(new List<Song> { song4, song5, song6 });
-            playlist3.Songs.AddRange(new List<Song> { song7, song8, song9 });
+            playlist1.Songs.Add(song1);
+            playlist1.Songs.Add(song2);
+            playlist1.Songs.Add(song3);
+
+            playlist2.Songs.Add(song4);
+            playlist2.Songs.Add(song5);
+            playlist2.Songs.Add(song6);
+
+            playlist3.Songs.Add(song7);
+            playlist3.Songs.Add(song8);
+            playlist3.Songs.Add(song9);
 
             song1.Playlists.Add(playlist1);
             song2.Playlists.Add(playlist1);
@@ -468,7 +484,8 @@ namespace Playlist
             song8.Playlists.Add(playlist3);
             song9.Playlists.Add(playlist3);
 
-            user1.Playlists.AddRange(new List<Models.Playlist> { playlist1, playlist3 });
+            user1.Playlists.Add(playlist1);
+            user1.Playlists.Add(playlist3);
             user2.Playlists.Add(playlist2);
  
             var history1 = new ListeningHistory
@@ -498,7 +515,8 @@ namespace Playlist
                 Song = song4
             };
 
-            user1.ListeningHistory.AddRange(new List<ListeningHistory> { history1, history2 });
+            user1.ListeningHistory.Add(history1);
+            user1.ListeningHistory.Add(history2);
             user2.ListeningHistory.Add(history3);
 
             var allSongs = new List<Song>

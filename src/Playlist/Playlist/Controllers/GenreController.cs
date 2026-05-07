@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Playlist.MockRepositories;
+using Playlist.Repositories;
 
 namespace Playlist.Controllers
 {
     public class GenreController : Controller
     {
-        private readonly GenreMockRepository _genreRepository;
+        private readonly GenreRepository _genreRepository;
 
-        public GenreController(GenreMockRepository genreRepository)
+        public GenreController(GenreRepository genreRepository)
         {
             _genreRepository = genreRepository;
         }

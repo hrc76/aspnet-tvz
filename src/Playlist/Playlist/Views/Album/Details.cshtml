@@ -1,46 +1,91 @@
 @model Album
 
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-        <li class="breadcrumb-item"><a asp-controller="Album" asp-action="Index">Albums</a></li>
-        <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
-    </ol>
+@{
+    ViewData["Title"] = Model.Title;
+    string coverName = Model.Title.Replace(" ", "") + ".jpg";
+}
+
+<nav aria-label="breadcrumb" class="mb-breadcrumb">
+    <a asp-controller="Home" asp-action="Index">Home</a>
+    <span>/</span>
+    <a asp-controller="Library" asp-action="Index">Library</a>
+    <span>/</span>
+    <span>@Model.Title</span>
 </nav>
 
-<h1>@Model.Title</h1>
+<section class="record-detail-hero">
+    <div class="record-cover-wrap">
+        <img src="~/images/albums/@coverName"
+             alt="@Model.Title cover"
+             onerror="this.src='/images/albums/placeholder.jpg'" />
+    </div>
 
-<p>
-    <strong>Artist:</strong>
-    <a asp-controller="Artist" asp-action="Details" asp-route-id="@Model.Artist.ArtistId">
-        @Model.Artist.StageName
-    </a>
-</p>
+    <div class="record-info">
+        <p class="mb-eyebrow">Album</p>
+        <h1>@Model.Title</h1>
 
-<p><strong>Release Date:</strong> @Model.ReleaseDate.ToShortDateString()</p>
-<p><strong>Label:</strong> @Model.Label</p>
-<p><strong>Total Tracks:</strong> @Model.TotalTracks</p>
-<p><strong>Rating:</strong> @Model.Rating</p>
+        <p class="record-artist">
+            by
+            <a asp-controller="Artist" asp-action="Details" asp-route-id="@Model.Artist.ArtistId">
+                @Model.Artist.StageName
+            </a>
+        </p>
 
-<h2>Songs</h2>
-@if (Model.Songs != null && Model.Songs.Any())
-{
-    <ul>
-        @foreach (var song in Model.Songs)
-        {
-            <li>
-                <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId">
-                    @song.Title
+        <div class="record-meta-row">
+            <span>@Model.ReleaseDate.Year</span>
+            <span>@Model.Label</span>
+            <span>@Model.TotalTracks tracks</span>
+            <span>@Model.Rating ★</span>
+        </div>
+
+        <div class="record-actions">
+            <a asp-controller="Song" asp-action="Index" class="mb-btn mb-btn-primary">Play Album</a>
+            <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Save to Library</a>
+        </div>
+    </div>
+</section>
+
+<section class="record-tracklist">
+    <div class="mb-section-header">
+        <div>
+            <p class="mb-eyebrow">Tracklist</p>
+            <h2>Songs on this album</h2>
+        </div>
+    </div>
+
+    @if (Model.Songs != null && Model.Songs.Any())
+    {
+        <div class="tracklist">
+            @{
+                var index = 1;
+            }
+
+            @foreach (var song in Model.Songs)
+            {
+                <a asp-controller="Song"
+                   asp-action="Details"
+                   asp-route-id="@song.SongId"
+                   class="track-row">
+                    <span class="track-number">@index</span>
+
+                    <div class="track-main">
+                        <h3>@song.Title</h3>
+                        <p>@song.Artist.StageName · @song.Genre.Name</p>
+                    </div>
+
+                    <span class="track-duration">@song.Duration</span>
                 </a>
-            </li>
-        }
-    </ul>
-}
-else
-{
-    <p>No songs available.</p>
-}
 
-<p>
-    <a asp-controller="Album" asp-action="Index">Back to Albums</a>
+                index++;
+            }
+        </div>
+    }
+    else
+    {
+        <p>No songs available for this album.</p>
+    }
+</section>
+
+<p class="mt-4">
+    <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Back to Library</a>
 </p>

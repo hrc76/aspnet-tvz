@@ -17,35 +17,28 @@
                         <span class="brand-mark">♪</span>
                         MusicBar
                     </a>
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar"
-                            aria-expanded="false" aria-label="Toggle navigation">
+
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                            aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                     </button>
+
                     <div class="collapse navbar-collapse" id="mainNavbar">
                         <ul class="navbar-nav ms-auto align-items-center">
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
                             </li>
+
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Song" asp-action="Index">Songs</a>
+                                <a class="nav-link" asp-controller="Library" asp-action="Index">Library</a>
                             </li>
+
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Artist" asp-action="Index">Artists</a>
+                                <a class="nav-link" asp-controller="Discover" asp-action="Index">Discover</a>
                             </li>
+
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Album" asp-action="Index">Albums</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Genre" asp-action="Index">Genres</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Playlist" asp-action="Index">Playlists</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="User" asp-action="Index">Users</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="ListeningHistory" asp-action="Index">History</a>
+                                <a class="nav-link nav-auth-link" href="#">Sign In</a>
                             </li>
                         </ul>
                     </div>
@@ -61,12 +54,16 @@
             </div>
         </main>
 
+        
+
         <footer class="border-top footer text-muted">
             <div class="container">
-                &copy; 2026 - MusicBar - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                &copy; 2026 - MusicBar - 
+                <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
             </div>
         </footer>
     </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

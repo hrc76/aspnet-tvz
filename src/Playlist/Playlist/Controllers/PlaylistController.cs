@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Playlist.MockRepositories;
+using Playlist.Repositories;
 
 namespace Playlist.Controllers
 {
     public class PlaylistController : Controller
     {
-        private readonly PlaylistMockRepository _playlistRepository;
+        private readonly PlaylistRepository _playlistRepository;
 
-        public PlaylistController(PlaylistMockRepository playlistRepository)
+        public PlaylistController(PlaylistRepository playlistRepository)
         {
             _playlistRepository = playlistRepository;
         }

@@ -1,9 +1,22 @@
 using Playlist;
 using Playlist.MockRepositories;
+using Microsoft.EntityFrameworkCore;
+using Playlist.Data;
+using Playlist.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddDbContext<MusicBarDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("MusicBarDbContext")));
+builder.Services.AddScoped<SongRepository>();
+builder.Services.AddScoped<ArtistRepository>();
+builder.Services.AddScoped<AlbumRepository>();
+builder.Services.AddScoped<GenreRepository>();
+builder.Services.AddScoped<PlaylistRepository>();
+builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<ListeningHistoryRepository>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<SongMockRepository>();
 builder.Services.AddSingleton<ArtistMockRepository>();
@@ -14,6 +27,12 @@ builder.Services.AddSingleton<UserMockRepository>();
 builder.Services.AddSingleton<ListeningHistoryMockRepository>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<MusicBarDbContext>();
+    DbInitializer.Initialize(context);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -28,6 +47,26 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "library",
+    pattern: "library",
+    defaults: new { controller = "Library", action = "Index" });
+
+app.MapControllerRoute(
+    name: "discover",
+    pattern: "discover",
+    defaults: new { controller = "Discover", action = "Index" });
+
+app.MapControllerRoute(
+    name: "song_details_custom",
+    pattern: "listen/{id:int}",
+    defaults: new { controller = "Song", action = "Details" });
+
+app.MapControllerRoute(
+    name: "album_details_custom",
+    pattern: "record/{id:int}",
+    defaults: new { controller = "Album", action = "Details" });
 
 app.MapControllerRoute(
     name: "default",

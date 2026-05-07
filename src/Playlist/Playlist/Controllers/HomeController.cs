@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Playlist.Models;
-using Playlist.MockRepositories;
+using Playlist.Repositories;
 using System.Diagnostics;
 
 namespace Playlist.Controllers
@@ -8,13 +8,13 @@ namespace Playlist.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly SongMockRepository _songRepository;
-        private readonly ArtistMockRepository _artistRepository;
+        private readonly SongRepository _songRepository;
+        private readonly ArtistRepository _artistRepository;
 
         public HomeController(
             ILogger<HomeController> logger,
-            SongMockRepository songRepository,
-            ArtistMockRepository artistRepository)
+            SongRepository songRepository,
+            ArtistRepository artistRepository)
         {
             _logger = logger;
             _songRepository = songRepository;
@@ -46,7 +46,10 @@ namespace Playlist.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View(new ErrorViewModel
+            {
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+            });
         }
     }
 }
