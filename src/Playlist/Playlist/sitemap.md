@@ -109,5 +109,5 @@ This document describes the available URLs in the MusicBar ASP.NET Core MVC appl
 
 The application uses the default MVC route:
 
-```csharp
+csharp
 {controller=Home}/{action=Index}/{id?}

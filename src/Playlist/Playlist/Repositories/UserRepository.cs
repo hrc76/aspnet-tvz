@@ -16,8 +16,9 @@ namespace Playlist.Repositories
         public List<User> GetAll()
         {
             return _context.Users
-                .Include(u => u.Playlists)
                 .Include(u => u.ListeningHistory)
+                .ThenInclude(h => h.Song)
+                .ThenInclude(s => s.Artist)
                 .ToList();
         }
 
@@ -26,7 +27,8 @@ namespace Playlist.Repositories
             return _context.Users
                 .Include(u => u.Playlists)
                 .Include(u => u.ListeningHistory)
-                    .ThenInclude(h => h.Song)
+                .ThenInclude(h => h.Song)
+                .ThenInclude(s => s.Artist)
                 .FirstOrDefault(u => u.UserId == id);
         }
     }

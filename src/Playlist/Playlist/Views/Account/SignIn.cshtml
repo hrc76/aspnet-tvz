@@ -1,0 +1,24 @@
+@model List<User>
+
+@{
+    ViewData["Title"] = "Sign In";
+}
+
+<section class="library-hero">
+    <p class="mb-eyebrow">Account</p>
+    <h1>Sign In</h1>
+    <p>Choose an existing MusicBar user.</p>
+</section>
+
+<form asp-controller="Account" asp-action="SignIn" method="post" class="account-form">
+    <label for="userId">User</label>
+
+    <select name="userId" id="userId">
+        @foreach (var user in Model)
+        {
+            <option value="@user.UserId">@user.Username</option>
+        }
+    </select>
+
+    <button type="submit" class="mb-btn mb-btn-primary">Sign In</button>
+</form>

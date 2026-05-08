@@ -10,15 +10,21 @@ namespace Playlist.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly SongRepository _songRepository;
         private readonly ArtistRepository _artistRepository;
+        private readonly AlbumRepository _albumRepository;
+        private readonly GenreRepository _genreRepository;
 
         public HomeController(
             ILogger<HomeController> logger,
             SongRepository songRepository,
-            ArtistRepository artistRepository)
+            ArtistRepository artistRepository,
+            AlbumRepository albumRepository,
+            GenreRepository genreRepository)
         {
             _logger = logger;
             _songRepository = songRepository;
             _artistRepository = artistRepository;
+            _albumRepository = albumRepository;
+            _genreRepository = genreRepository;
         }
 
         public IActionResult Index()
@@ -28,12 +34,26 @@ namespace Playlist.Controllers
                 .Take(5)
                 .ToList();
 
+            var featuredAlbums = _albumRepository.GetAll()
+                .OrderByDescending(a => a.Rating)
+                .Take(4)
+                .ToList();
+
+            var featuredGenres = _genreRepository.GetAll()
+                .Take(5)
+                .ToList();
+
             var featuredArtists = _artistRepository.GetAll()
                 .Take(3)
                 .ToList();
 
+            var heroAlbum = featuredAlbums.FirstOrDefault();
+
             ViewBag.TopSongs = topSongs;
+            ViewBag.FeaturedAlbums = featuredAlbums;
+            ViewBag.FeaturedGenres = featuredGenres;
             ViewBag.FeaturedArtists = featuredArtists;
+            ViewBag.HeroAlbum = heroAlbum;
 
             return View();
         }

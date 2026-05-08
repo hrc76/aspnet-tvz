@@ -27,5 +27,18 @@ The application uses:
 
 The application uses:
 
-```csharp
+csharp
 MusicBarDbContext
+
+# EF Workflow
+
+1. Modify model
+2. Create migration
+3. Update database
+4. Update repositories
+
+# Routing Rules
+
+- /Song/Details/{id}
+- /Album/Details/{id}
+- /Artist/Details/{id}

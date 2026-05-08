@@ -5,13 +5,6 @@
     string coverName = Model.Title.Replace(" ", "") + ".jpg";
 }
 
-<nav aria-label="breadcrumb" class="mb-breadcrumb">
-    <a asp-controller="Home" asp-action="Index">Home</a>
-    <span>/</span>
-    <a asp-controller="Library" asp-action="Index">Library</a>
-    <span>/</span>
-    <span>@Model.Title</span>
-</nav>
 
 <section class="record-detail-hero">
     <div class="record-cover-wrap">
@@ -87,5 +80,7 @@
 </section>
 
 <p class="mt-4">
-    <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Back to Library</a>
+    <a asp-controller="Home" asp-action="Index" class="mb-btn mb-btn-ghost">Home</a>
+    <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Library</a>
+    <a asp-controller="Discover" asp-action="Index" class="mb-btn mb-btn-ghost">Discover</a>
 </p>

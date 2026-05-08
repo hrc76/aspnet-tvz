@@ -1,12 +1,5 @@
 @model ListeningHistory
 
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-        <li class="breadcrumb-item"><a asp-controller="ListeningHistory" asp-action="Index">History</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Details</li>
-    </ol>
-</nav>
 
 <h1>Listening History Details</h1>
 
@@ -27,6 +20,8 @@
 <p><strong>Listened At:</strong> @Model.ListenedAt</p>
 <p><strong>Repeats:</strong> @Model.Repeats</p>
 
-<p>
-    <a asp-controller="ListeningHistory" asp-action="Index">Back to Listening History</a>
+<p class="mt-4">
+    <a asp-controller="Home" asp-action="Index" class="mb-btn mb-btn-ghost">Home</a>
+    <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Library</a>
+    <a asp-controller="Discover" asp-action="Index" class="mb-btn mb-btn-ghost">Discover</a>
 </p>

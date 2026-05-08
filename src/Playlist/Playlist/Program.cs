@@ -8,8 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<MusicBarDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("MusicBarDbContext")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MusicBarDbContext")));
 builder.Services.AddScoped<SongRepository>();
 builder.Services.AddScoped<ArtistRepository>();
 builder.Services.AddScoped<AlbumRepository>();
@@ -25,6 +24,8 @@ builder.Services.AddSingleton<GenreMockRepository>();
 builder.Services.AddSingleton<PlaylistMockRepository>();
 builder.Services.AddSingleton<UserMockRepository>();
 builder.Services.AddSingleton<ListeningHistoryMockRepository>();
+builder.Services.AddSession();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -46,6 +47,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(
@@ -57,16 +59,6 @@ app.MapControllerRoute(
     name: "discover",
     pattern: "discover",
     defaults: new { controller = "Discover", action = "Index" });
-
-app.MapControllerRoute(
-    name: "song_details_custom",
-    pattern: "listen/{id:int}",
-    defaults: new { controller = "Song", action = "Details" });
-
-app.MapControllerRoute(
-    name: "album_details_custom",
-    pattern: "record/{id:int}",
-    defaults: new { controller = "Album", action = "Details" });
 
 app.MapControllerRoute(
     name: "default",

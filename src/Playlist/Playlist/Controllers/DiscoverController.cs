@@ -26,16 +26,16 @@ namespace Playlist.Controllers
         {
             ViewBag.Songs = _songRepository.GetAll()
                 .OrderByDescending(s => s.PopularityScore)
-                .Take(6)
+                .Take(7)
                 .ToList();
 
             ViewBag.Artists = _artistRepository.GetAll()
-                .Take(6)
+                .Take(5)
                 .ToList();
 
             ViewBag.Albums = _albumRepository.GetAll()
                 .OrderByDescending(a => a.Rating)
-                .Take(6)
+                .Take(5)
                 .ToList();
 
             ViewBag.Genres = _genreRepository.GetAll();

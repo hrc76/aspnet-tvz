@@ -1,31 +1,78 @@
 @model Genre
 
+@{
+    ViewData["Title"] = Model.Name;
+}
 
-<h1>@Model.Name</h1>
 
-<p><strong>Description:</strong> @Model.Description</p>
-<p><strong>Number of Songs:</strong> @Model.Songs.Count</p>
+<section class="genre-zone-hero">
+    <div>
+        <p class="mb-eyebrow">Sound zone</p>
+        <h1>@Model.Name</h1>
+        <p>@Model.Description</p>
+    </div>
 
-<h2>Songs</h2>
-@if (Model.Songs != null && Model.Songs.Any())
-{
-    <ul>
-        @foreach (var song in Model.Songs)
-        {
-            <li>
-                <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId">
-                    @song.Title
+    <div class="genre-stats-card">
+        <span>@Model.Songs.Count</span>
+        <p>songs in this sound zone</p>
+    </div>
+</section>
+
+<section class="genre-mood-board">
+    <article>
+        <span>Library mood</span>
+        <h2>Raw sound selection</h2>
+        <p>
+            This genre page collects tracks, artists and records connected through the same sound identity.
+        </p>
+    </article>
+
+    <article>
+        <span>Discovery path</span>
+        <h2>Start with the tracks</h2>
+        <p>
+            Open a song to see its album, artist and related metadata.
+        </p>
+    </article>
+</section>
+
+<section class="mb-section">
+    <div class="mb-section-header">
+        <div>
+            <p class="mb-eyebrow">Tracks</p>
+            <h2>@Model.Name Songs</h2>
+        </div>
+    </div>
+
+    @if (Model.Songs != null && Model.Songs.Any())
+    {
+        <div class="genre-track-grid">
+            @foreach (var song in Model.Songs)
+            {
+                <a asp-controller="Song"
+                   asp-action="Details"
+                   asp-route-id="@song.SongId"
+                   class="genre-track-card">
+                    <div class="genre-track-icon">▶</div>
+
+                    <div>
+                        <h3>@song.Title</h3>
+                        <p>@song.Artist.StageName</p>
+                    </div>
+
+                    <span>@song.Duration</span>
                 </a>
-                - @song.Artist.StageName
-            </li>
-        }
-    </ul>
-}
-else
-{
-    <p>No songs available for this genre.</p>
-}
+            }
+        </div>
+    }
+    else
+    {
+        <p>No songs available for this genre.</p>
+    }
+</section>
 
-<p>
-    <a asp-controller="Discover" asp-action="Index">Back to Discover</a>
+<p class="mt-4">
+    <a asp-controller="Home" asp-action="Index" class="mb-btn mb-btn-ghost">Home</a>
+    <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Library</a>
+    <a asp-controller="Discover" asp-action="Index" class="mb-btn mb-btn-ghost">Discover</a>
 </p>

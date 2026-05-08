@@ -1,0 +1,73 @@
+@model User
+
+@{
+    ViewData["Title"] = "Account";
+}
+
+<section class="library-hero">
+    <p class="mb-eyebrow">Signed in</p>
+    <h1>@Model.Username</h1>
+    <p>@Model.Email</p>
+
+    <div class="playlist-meta">
+        <span>Favorite genre: @Model.FavoriteGenreName</span>
+        <span>@(Model.IsPremium ? "Premium user" : "Free user")</span>
+        <span>Joined: @Model.RegistrationDate.ToShortDateString()</span>
+    </div>
+
+    <a asp-controller="Account" asp-action="SignOut" class="mb-btn mb-btn-ghost">
+        Sign Out
+    </a>
+</section>
+
+<section class="mb-section">
+    <div class="mb-section-header">
+        <div>
+            <p class="mb-eyebrow">Your playlists</p>
+            <h2>Playlists</h2>
+        </div>
+    </div>
+
+    <div class="library-grid">
+        @foreach (var playlist in Model.Playlists)
+        {
+            <a asp-controller="Playlist"
+               asp-action="Details"
+               asp-route-id="@playlist.PlaylistId"
+               class="library-card">
+                <div class="library-card-body">
+                    <span class="library-type">Playlist</span>
+                    <h3>@playlist.Name</h3>
+                    <p>@playlist.Description</p>
+                    <small>@(playlist.IsPublic ? "Public" : "Private")</small>
+                </div>
+            </a>
+        }
+    </div>
+</section>
+
+<section class="mb-section">
+    <div class="mb-section-header">
+        <div>
+            <p class="mb-eyebrow">Listening activity</p>
+            <h2>Recently Played</h2>
+        </div>
+    </div>
+
+    <div class="mb-song-list">
+        @foreach (var history in Model.ListeningHistory)
+        {
+            <article class="mb-song-row">
+                <div class="mb-play-dot">▶</div>
+                <div>
+                    <h3>@history.Song.Title</h3>
+                    <p>@history.Song.Artist.StageName · listened @history.ListenedAt</p>
+                </div>
+                <span>@history.Repeats repeats</span>
+                <a asp-controller="Song" asp-action="Details" asp-route-id="@history.Song.SongId">
+                    Open
+                </a>
+            </article>
+        }
+    </div>
+</section>

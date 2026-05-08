@@ -5,19 +5,19 @@
 }
 
 a {
-  color: #0077cc;
+  color: #ff8a1f;
 }
 
 .btn-primary {
   color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+  background-color: #ec8c32;
+  border-color: #f77904;
 }
 
 .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
   color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+  background-color: #ec8c32;
+  border-color: #f77904;
 }
 
 .border-top {

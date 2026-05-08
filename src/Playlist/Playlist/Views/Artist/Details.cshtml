@@ -4,14 +4,6 @@
     ViewData["Title"] = Model.StageName;
 }
 
-<nav aria-label="breadcrumb" class="mb-breadcrumb">
-    <a asp-controller="Home" asp-action="Index">Home</a>
-    <span>/</span>
-    <a asp-controller="Discover" asp-action="Index">Discover</a>
-    <span>/</span>
-    <span>@Model.StageName</span>
-</nav>
-
 <section class="artist-profile-hero">
     <div class="artist-avatar">
         <span>@Model.StageName.Substring(0, 1)</span>
@@ -104,5 +96,7 @@
 </section>
 
 <p class="mt-4">
-    <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Back to Library</a>
+    <a asp-controller="Home" asp-action="Index" class="mb-btn mb-btn-ghost">Home</a>
+    <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Library</a>
+    <a asp-controller="Discover" asp-action="Index" class="mb-btn mb-btn-ghost">Discover</a>
 </p>
