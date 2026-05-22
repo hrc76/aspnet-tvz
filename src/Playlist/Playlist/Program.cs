@@ -26,6 +26,8 @@ builder.Services.AddSingleton<UserMockRepository>();
 builder.Services.AddSingleton<ListeningHistoryMockRepository>();
 builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<FavoriteSongRepository>();
+builder.Services.AddScoped<SavedAlbumRepository>();
 
 var app = builder.Build();
 

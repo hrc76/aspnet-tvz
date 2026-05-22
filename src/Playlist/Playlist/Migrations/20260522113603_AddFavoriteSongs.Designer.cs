@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Playlist.Data;
 
@@ -11,9 +12,10 @@ using Playlist.Data;
 namespace Playlist.Migrations
 {
     [DbContext(typeof(MusicBarDbContext))]
-    partial class MusicBarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260522113603_AddFavoriteSongs")]
+    partial class AddFavoriteSongs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -186,32 +188,6 @@ namespace Playlist.Migrations
                     b.ToTable("Playlists");
                 });
 
-            modelBuilder.Entity("Playlist.Models.SavedAlbum", b =>
-                {
-                    b.Property<int>("SavedAlbumId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SavedAlbumId"), 1L, 1);
-
-                    b.Property<int>("AlbumId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("SavedAlbumId");
-
-                    b.HasIndex("AlbumId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("SavedAlbums");
-                });
-
             modelBuilder.Entity("Playlist.Models.Song", b =>
                 {
                     b.Property<int>("SongId")
@@ -362,25 +338,6 @@ namespace Playlist.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("Playlist.Models.SavedAlbum", b =>
-                {
-                    b.HasOne("Playlist.Models.Album", "Album")
-                        .WithMany()
-                        .HasForeignKey("AlbumId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Playlist.Models.User", "User")
-                        .WithMany("SavedAlbums")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Album");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Playlist.Models.Song", b =>
                 {
                     b.HasOne("Playlist.Models.Album", "Album")
@@ -447,8 +404,6 @@ namespace Playlist.Migrations
                     b.Navigation("ListeningHistory");
 
                     b.Navigation("Playlists");
-
-                    b.Navigation("SavedAlbums");
                 });
 #pragma warning restore 612, 618
         }

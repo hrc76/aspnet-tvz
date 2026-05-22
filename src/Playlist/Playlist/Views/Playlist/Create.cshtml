@@ -1,0 +1,73 @@
+@model global::Playlist.Models.Playlist
+
+@{
+    ViewData["Title"] = "Create Playlist";
+}
+
+<section class="library-hero">
+    <p class="mb-eyebrow">New playlist</p>
+
+    <h1>Create Playlist</h1>
+
+    <p>
+        Create a public or private playlist for your library.
+    </p>
+</section>
+
+<form asp-controller="Playlist"
+      asp-action="Create"
+      method="post"
+      class="account-form playlist-create-form">
+
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        <label asp-for="Name">Playlist name</label>
+
+        <input asp-for="Name"
+               class="mb-input"
+               placeholder="Late Night Drive" />
+
+        <span asp-validation-for="Name"
+              class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Description">Description</label>
+
+        <textarea asp-for="Description"
+                  class="mb-input"
+                  rows="5"
+                  placeholder="Describe the vibe of this playlist..."></textarea>
+
+        <span asp-validation-for="Description"
+              class="text-danger"></span>
+    </div>
+
+    <div class="playlist-visibility-box">
+        <label class="mb-checkbox">
+            <input asp-for="IsPublic" />
+
+            <div>
+                <strong>Public playlist</strong>
+                <p>Other users can see this playlist.</p>
+            </div>
+        </label>
+    </div>
+
+    <div class="playlist-create-actions">
+        <button type="submit" class="mb-btn mb-btn-primary">
+            Create Playlist
+        </button>
+
+        <a asp-controller="Library"
+           asp-action="Index"
+           class="mb-btn mb-btn-ghost">
+            Cancel
+        </a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

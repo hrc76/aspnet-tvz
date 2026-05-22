@@ -32,8 +32,31 @@
         </div>
 
         <div class="record-actions">
-            <a asp-controller="Song" asp-action="Index" class="mb-btn mb-btn-primary">Play Album</a>
-            <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Save to Library</a>
+            <button type="button" class="mb-btn mb-btn-primary">
+                    Play Album
+            </button>
+            @if (ViewBag.IsSaved == true)
+{
+    <form asp-controller="SavedAlbum" asp-action="Remove" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="albumId" value="@Model.AlbumId" />
+
+        <button type="submit" class="mb-btn mb-btn-danger">
+            Remove from Library
+        </button>
+    </form>
+}
+else
+{
+    <form asp-controller="SavedAlbum" asp-action="Add" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="albumId" value="@Model.AlbumId" />
+
+        <button type="submit" class="mb-btn mb-btn-ghost">
+            Save to Library
+        </button>
+    </form>
+}
         </div>
     </div>
 </section>

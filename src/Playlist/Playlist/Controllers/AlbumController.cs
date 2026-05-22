@@ -7,9 +7,12 @@ namespace Playlist.Controllers
     {
         private readonly AlbumRepository _albumRepository;
 
-        public AlbumController(AlbumRepository albumRepository)
+        private readonly SavedAlbumRepository _savedAlbumRepository;
+
+        public AlbumController(AlbumRepository albumRepository, SavedAlbumRepository savedAlbumRepository)
         {
             _albumRepository = albumRepository;
+            _savedAlbumRepository = savedAlbumRepository;
         }
 
         public IActionResult Index()
@@ -26,7 +29,10 @@ namespace Playlist.Controllers
             {
                 return NotFound();
             }
+            var userId = HttpContext.Session.GetInt32("UserId");
 
+                ViewBag.IsSaved = userId != null &&
+                _savedAlbumRepository.IsSaved(userId.Value, album.AlbumId);
             return View(album);
         }
     }

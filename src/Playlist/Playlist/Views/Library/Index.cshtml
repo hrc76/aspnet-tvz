@@ -10,16 +10,16 @@
     <h1>Library</h1>
     <p>Favorite songs, saved albums and playlists in one place.</p>
 
-    <div class="library-tools">
-        <input type="text" placeholder="Search your library..." />
-        <button>All</button>
-        <button>Albums</button>
-        <button>Playlists</button>
-        <button>A-Z</button>
-    </div>
+   <div class="library-tools">
+    <input id="librarySearch" type="text" placeholder="Search your library..." />
+
+    <button type="button" class="library-filter active" data-type="all">All</button>
+    <button type="button" class="library-filter" data-type="albums">Albums</button>
+    <button type="button" class="library-filter" data-type="playlists">Playlists</button>
+</div>
 </section>
 
-<section class="mb-section">
+<section id="favoriteSongsSection" class="mb-section">
     <div class="mb-section-header">
         <div>
             <p class="mb-eyebrow">Pinned tracks</p>
@@ -48,17 +48,17 @@
     </div>
 </section>
 
-<section class="mb-section">
+<section id="libraryResultsSection" class="mb-section">
     <div class="mb-section-header">
         <div>
             <p class="mb-eyebrow">Saved items</p>
             <h2>Albums & Playlists</h2>
         </div>
 
-        <a href="#">+ Create Playlist</a>
+        <a asp-controller="Playlist" asp-action="Create">+ Create Playlist</a>
     </div>
 
-    <div class="library-grid">
+    <div id="libraryGrid" class="library-grid">
         @foreach (var item in Model.LibraryItems)
         {
             <a asp-controller="@item.ControllerName"
@@ -80,3 +80,87 @@
         }
     </div>
 </section>
+@section Scripts {
+    <script>
+        $(function () {
+            let currentType = "all";
+
+            function loadLibraryItems() {
+                const term = $("#librarySearch").val() || "";
+
+                $.ajax({
+                    url: "/Library/Search",
+                    method: "GET",
+                    data: {
+                        term: term,
+                        type: currentType
+                    },
+                    success: function (data) {
+                        let html = "";
+
+                        data.forEach(function (item) {
+                            html += `
+                                <a href="${item.url}" class="library-card">
+                                    <img src="${item.imagePath}"
+                                         alt="${item.title}"
+                                         onerror="this.src='/images/albums/placeholder.jpg'" />
+
+                                    <div class="library-card-body">
+                                        <span class="library-type">${item.type}</span>
+                                        <h3>${item.title}</h3>
+                                        <p>${item.subtitle}</p>
+                                        <small>${item.meta}</small>
+                                    </div>
+                                </a>`;
+                        });
+
+                        if (html === "") {
+                            html = `<p class="empty-search-message">No results found.</p>`;
+                        }
+
+                        $("#libraryGrid").html(html);
+
+                        if (term.length > 0 || currentType !== "all") {
+                            $("#favoriteSongsSection").hide();
+                        } else {
+                            $("#favoriteSongsSection").show();
+                        }
+                    },
+                    error: function () {
+                        console.log("Library search failed.");
+                    }
+                });
+            }
+
+            $("#librarySearch").on("input", function () {
+                loadLibraryItems();
+
+                const results = document.getElementById("libraryResultsSection");
+
+                if (results) {
+                    results.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+                }
+            });
+
+            $(".library-filter").on("click", function () {
+                $(".library-filter").removeClass("active");
+                $(this).addClass("active");
+
+                currentType = $(this).data("type");
+                loadLibraryItems();
+
+                const results = document.getElementById("libraryResultsSection");
+
+                if (results) {
+                    results.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+                }
+            });
+        });
+    </script>
+}

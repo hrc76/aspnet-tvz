@@ -5,7 +5,6 @@
     string coverName = Model.Album.Title.Replace(" ", "") + ".jpg";
 }
 
-
 <section class="song-player-hero">
     <div class="song-cover">
         <img src="~/images/albums/@coverName"
@@ -47,8 +46,53 @@
         </div>
 
         <div class="record-actions">
-            <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-primary">Add to Favorites</a>
-            <a asp-controller="Playlist" asp-action="Index" class="mb-btn mb-btn-ghost">Add to Playlist</a>
+            @if (ViewBag.IsFavorite == true)
+            {
+                <form asp-controller="Favorite" asp-action="Remove" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="songId" value="@Model.SongId" />
+
+                    <button type="submit" class="mb-btn mb-btn-danger">
+                        Remove Favorite
+                    </button>
+                </form>
+            }
+            else
+            {
+                <form asp-controller="Favorite" asp-action="Add" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="songId" value="@Model.SongId" />
+
+                    <button type="submit" class="mb-btn mb-btn-primary">
+                        Add to Favorites
+                    </button>
+                </form>
+            }
+
+            <form asp-controller="Playlist"
+                  asp-action="AddSong"
+                  method="post"
+                  class="playlist-add-form autocomplete-form">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="songId" value="@Model.SongId" />
+                <input type="hidden" name="playlistId" id="selectedPlaylistId" />
+
+                <div class="autocomplete-box">
+                    <label>Add to playlist</label>
+
+                    <input id="playlistAutocomplete"
+                           type="text"
+                           class="mb-input"
+                           placeholder="Search playlist..." />
+
+                    <div id="playlistAutocompleteResults" class="autocomplete-results"></div>
+                </div>
+
+                <button type="submit" class="mb-btn mb-btn-primary">
+                    Add to Playlist
+                </button>
+            </form>
         </div>
     </div>
 </section>
@@ -87,3 +131,57 @@
     <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Library</a>
     <a asp-controller="Discover" asp-action="Index" class="mb-btn mb-btn-ghost">Discover</a>
 </p>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $("#playlistAutocomplete").on("input", function () {
+                const term = $(this).val();
+
+                if (term.length < 1) {
+                    $("#playlistAutocompleteResults").empty();
+                    $("#selectedPlaylistId").val("");
+                    return;
+                }
+
+                $.ajax({
+                    url: "/Playlist/SearchUserPlaylists",
+                    method: "GET",
+                    data: { term: term },
+                    success: function (data) {
+                        let html = "";
+
+                        data.forEach(function (item) {
+                            html += `
+                                <button type="button"
+                                        class="autocomplete-item"
+                                        data-id="${item.id}"
+                                        data-text="${item.text}">
+                                    <strong>${item.text}</strong>
+                                    <span>${item.subtitle}</span>
+                                </button>`;
+                        });
+
+                        $("#playlistAutocompleteResults").html(html);
+                    }
+                });
+            });
+
+            $(document).on("click", ".autocomplete-item", function () {
+                const id = $(this).data("id");
+                const text = $(this).data("text");
+
+                $("#selectedPlaylistId").val(id);
+                $("#playlistAutocomplete").val(text);
+                $("#playlistAutocompleteResults").empty();
+            });
+
+            $(".autocomplete-form").on("submit", function (e) {
+                if (!$("#selectedPlaylistId").val()) {
+                    e.preventDefault();
+                    alert("Please select a playlist first.");
+                }
+            });
+        });
+    </script>
+}

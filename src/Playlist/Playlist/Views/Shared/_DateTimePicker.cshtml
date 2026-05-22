@@ -1,0 +1,11 @@
+@model string
+
+<div class="datetime-control">
+    <label>@ViewData["Label"]</label>
+    <input type="text"
+           name="@ViewData["Name"]"
+           value="@Model"
+           class="mb-input js-datetime"
+           placeholder="dd.MM.yyyy HH:mm" />
+    <small>Format: dd.MM.yyyy HH:mm</small>
+</div>

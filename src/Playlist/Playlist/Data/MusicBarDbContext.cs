@@ -17,6 +17,8 @@ namespace Playlist.Data
         public DbSet<User> Users => Set<User>();
         public DbSet<Playlist.Models.Playlist> Playlists => Set<Playlist.Models.Playlist>();
         public DbSet<ListeningHistory> ListeningHistories => Set<ListeningHistory>();
+        public DbSet<FavoriteSong> FavoriteSongs => Set<FavoriteSong>();
+        public DbSet<SavedAlbum> SavedAlbums => Set<SavedAlbum>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -85,6 +87,30 @@ namespace Playlist.Data
                 .HasOne(h => h.Song)
                 .WithMany()
                 .HasForeignKey(h => h.SongId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<FavoriteSong>()
+                .HasOne(f => f.User)
+                .WithMany(u => u.FavoriteSongs)
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<FavoriteSong>()
+                .HasOne(f => f.Song)
+                .WithMany()
+                .HasForeignKey(f => f.SongId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SavedAlbum>()
+                .HasOne(s => s.User)
+                .WithMany(u => u.SavedAlbums)
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SavedAlbum>()
+                .HasOne(s => s.Album)
+                .WithMany()
+                .HasForeignKey(s => s.AlbumId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

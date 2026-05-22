@@ -30,23 +30,28 @@ namespace Playlist.Controllers
             HttpContext.Session.SetInt32("UserId", user.UserId);
             HttpContext.Session.SetString("Username", user.Username);
 
-            return RedirectToAction("Profile");
+            return RedirectToAction(nameof(Profile), new { id = user.UserId });
         }
 
-        public IActionResult Profile()
+        public IActionResult Profile(int? id)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-
-            if (userId == null)
+            if (id == null)
             {
-                return RedirectToAction("SignIn");
+                var sessionUserId = HttpContext.Session.GetInt32("UserId");
+
+                if (sessionUserId == null)
+                {
+                    return RedirectToAction(nameof(SignIn));
+                }
+
+                id = sessionUserId.Value;
             }
 
-            var user = _userRepository.GetById(userId.Value);
+            var user = _userRepository.GetById(id.Value);
 
             if (user == null)
             {
-                return RedirectToAction("SignIn");
+                return NotFound();
             }
 
             return View(user);
@@ -55,6 +60,7 @@ namespace Playlist.Controllers
         public IActionResult SignOut()
         {
             HttpContext.Session.Clear();
+
             return RedirectToAction("Index", "Home");
         }
     }

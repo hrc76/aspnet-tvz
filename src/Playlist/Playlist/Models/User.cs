@@ -20,5 +20,8 @@ namespace Playlist.Models
         public virtual ICollection<Playlist> Playlists { get; set; } = new List<Playlist>();
 
         public virtual ICollection<ListeningHistory> ListeningHistory { get; set; } = new List<ListeningHistory>();
+
+        public virtual ICollection<FavoriteSong> FavoriteSongs { get; set; } = new List<FavoriteSong>();
+        public virtual ICollection<SavedAlbum> SavedAlbums { get; set; } = new List<SavedAlbum>();
     }
 }
