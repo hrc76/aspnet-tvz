@@ -1,14 +1,31 @@
 @using Playlist.Models
+@using System.Text.Json
 
 @{
     ViewData["Title"] = "Discover";
 
-    var songs = ViewBag.Songs as List<Song>;
+    var songs   = ViewBag.Songs   as List<Song>;
     var artists = ViewBag.Artists as List<Artist>;
-    var albums = ViewBag.Albums as List<Album>;
-    var genres = ViewBag.Genres as List<Genre>;
+    var albums  = ViewBag.Albums  as List<Album>;
+    var genres  = ViewBag.Genres  as List<Genre>;
 
-    string CoverName(string title) => title.Replace(" ", "") + ".jpg";
+    string GenreColor(string? g) => g?.ToLower() switch {
+        "sludge metal" => "#8b1a1a",
+        "hip hop"      => "#c8960a",
+        "techno"       => "#1a4a8b",
+        "rock"         => "#1a5c2a",
+        "heavy metal"  => "#4a1a1a",
+        "electronic"   => "#0a2a4a",
+        _              => "#ff8a1f"
+    };
+
+    string SongJson(Song s) => JsonSerializer.Serialize(new {
+        id         = s.SongId,
+        title      = s.Title,
+        artist     = s.Artist?.StageName ?? "",
+        audioUrl   = s.AudioUrl ?? "",
+        coverColor = GenreColor(s.Genre?.Name)
+    });
 }
 
 <section class="discover-hero">
@@ -17,14 +34,8 @@
     <p>Search songs, explore genres and find records from your music vault.</p>
 
     <div class="discover-search">
-        <input id="discoverSearch"
-               type="text"
-               class="mb-input"
-               placeholder="Search songs, artists, albums..." />
-
-        <button class="mb-btn mb-btn-primary">
-            Search
-        </button>
+        <input id="discoverSearch" type="text" class="mb-input" placeholder="Search songs, artists, albums…" autocomplete="off" />
+        <button class="mb-btn mb-btn-primary">Search</button>
     </div>
 
     <div id="discoverResults" class="ajax-results"></div>
@@ -43,11 +54,9 @@
         {
             foreach (var genre in genres)
             {
-                <a asp-controller="Genre"
-                   asp-action="Details"
-                   asp-route-id="@genre.GenreId"
-                   class="discover-genre-card">
-
+                string gc = GenreColor(genre.Name);
+                <a asp-controller="Genre" asp-action="Details" asp-route-id="@genre.GenreId"
+                   class="discover-genre-card" style="--genre-color:@gc">
                     <span>@genre.Name</span>
                     <p>@genre.Description</p>
                 </a>
@@ -62,6 +71,17 @@
             <p class="mb-eyebrow">Recommended</p>
             <h2>High Energy Picks</h2>
         </div>
+        @if (songs != null && songs.Any())
+        {
+            var discQueue = JsonSerializer.Serialize(songs.Select(s => new {
+                id         = s.SongId,
+                title      = s.Title,
+                artist     = s.Artist?.StageName ?? "",
+                audioUrl   = s.AudioUrl ?? "",
+                coverColor = GenreColor(s.Genre?.Name)
+            }));
+            <button class="mb-btn mb-btn-ghost js-play-all-btn" data-queue="@discQueue">▶ Play All</button>
+        }
     </div>
 
     <div class="mb-song-list">
@@ -69,21 +89,20 @@
         {
             foreach (var song in songs)
             {
-                <article class="mb-song-row">
-                    <div class="mb-play-dot">▶</div>
-
-                    <div>
-                        <h3>@song.Title</h3>
-                        <p>@song.Artist.StageName · @song.Genre.Name · @song.Mood</p>
+                var sj = SongJson(song);
+                <article class="mb-song-row track-row" data-song-id="@song.SongId">
+                    <div class="mb-song-row-left">
+                        <div class="eq-bars"><span></span><span></span><span></span><span></span></div>
+                        <button class="play-btn js-play-btn" data-song="@sj" title="Play @song.Title">
+                            <span class="play-icon">▶</span>
+                        </button>
                     </div>
-
-                    <span>@song.PopularityScore score</span>
-
-                    <a asp-controller="Song"
-                       asp-action="Details"
-                       asp-route-id="@song.SongId">
-                        Open
-                    </a>
+                    <div class="mb-song-row-info">
+                        <h3>@song.Title @if (song.IsExplicit) { <span class="explicit-badge">E</span> }</h3>
+                        <p>@song.Artist?.StageName · @song.Genre?.Name · @song.Mood</p>
+                    </div>
+                    <span class="mb-song-row-stat">@song.PopularityScore ★</span>
+                    <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId" class="mb-btn mb-btn-ghost btn-sm">Open</a>
                 </article>
             }
         }
@@ -96,6 +115,7 @@
             <p class="mb-eyebrow">Records to open</p>
             <h2>Top Rated Albums</h2>
         </div>
+        <a asp-controller="Album" asp-action="Index">View all</a>
     </div>
 
     <div class="mb-album-grid">
@@ -103,18 +123,13 @@
         {
             foreach (var album in albums)
             {
-                <a asp-controller="Album"
-                   asp-action="Details"
-                   asp-route-id="@album.AlbumId"
-                   class="mb-album-card">
-
-                    <img src="~/images/albums/@CoverName(album.Title)"
-                         alt="@album.Title cover"
-                         onerror="this.src='/images/albums/placeholder.jpg'" />
-
-                    <h3>@album.Title</h3>
-                    <p>@album.Artist.StageName</p>
-                    <span>@album.Rating ★</span>
+                <a asp-controller="Album" asp-action="Details" asp-route-id="@album.AlbumId" class="mb-album-card">
+                    @await Html.PartialAsync("_AlbumCover", album)
+                    <div class="mb-album-card-info">
+                        <h3>@album.Title</h3>
+                        <p>@album.Artist?.StageName</p>
+                        <span>@album.Rating ★</span>
+                    </div>
                 </a>
             }
         }
@@ -127,6 +142,7 @@
             <p class="mb-eyebrow">Artist radar</p>
             <h2>Artists to Explore</h2>
         </div>
+        <a asp-controller="Artist" asp-action="Index">View all</a>
     </div>
 
     <div class="mb-mini-grid discover-artists">
@@ -134,11 +150,8 @@
         {
             foreach (var artist in artists)
             {
-                <a asp-controller="Artist"
-                   asp-action="Details"
-                   asp-route-id="@artist.ArtistId"
-                   class="mb-mini-card">
-
+                <a asp-controller="Artist" asp-action="Details" asp-route-id="@artist.ArtistId" class="mb-mini-card">
+                    <span class="mini-card-avatar">@artist.StageName.Substring(0, 1).ToUpper()</span>
                     <h3>@artist.StageName</h3>
                     <p>@artist.Country · @(artist.IsActive ? "Active" : "Inactive")</p>
                 </a>
@@ -150,40 +163,32 @@
 @section Scripts {
     <script>
         $(function () {
+            var $input   = $("#discoverSearch");
+            var $results = $("#discoverResults");
+            var timeout;
 
-            $("#discoverSearch").on("keyup", function () {
+            $input.on("input", function () {
+                clearTimeout(timeout);
+                var term = $(this).val().trim();
+                if (term.length < 2) { $results.empty(); return; }
 
-                const term = $(this).val();
-
-                if (term.length < 2) {
-                    $("#discoverResults").empty();
-                    return;
-                }
-
-                $.ajax({
-                    url: "/Discover/Search",
-                    method: "GET",
-                    data: { term: term },
-
-                    success: function (data) {
-
-                        let html = "";
-
-                        data.forEach(function (item) {
-
-                            html += `
-                                <a class="ajax-result-item" href="${item.url}">
-                                    <strong>${item.title}</strong>
-                                    <span>${item.subtitle}</span>
-                                </a>
-                            `;
-                        });
-
-                        $("#discoverResults").html(html);
-                    }
-                });
+                timeout = setTimeout(function () {
+                    $.ajax({
+                        url: "/Discover/Search",
+                        method: "GET",
+                        data: { term: term },
+                        success: function (data) {
+                            var html = "";
+                            data.forEach(function (item) {
+                                html += '<a class="ajax-result-item" href="' + item.url + '">' +
+                                        '<strong>' + item.title + '</strong>' +
+                                        '<span>' + item.subtitle + '</span></a>';
+                            });
+                            $results.html(html || '<div class="search-empty">No results.</div>');
+                        }
+                    });
+                }, 300);
             });
-
         });
     </script>
 }

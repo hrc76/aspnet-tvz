@@ -32,5 +32,6 @@ namespace Playlist.Models
         public virtual User Owner { get; set; } = null!;
 
         public virtual ICollection<Song> Songs { get; set; } = new List<Song>();
+        public virtual ICollection<PlaylistAttachment> Attachments { get; set; } = new List<PlaylistAttachment>();
     }
 }

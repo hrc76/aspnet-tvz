@@ -1,33 +1,115 @@
 @model List<User>
+@using Playlist.Models
 
-<h1>Users</h1>
+@{
+    ViewData["Title"] = "Users";
+}
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Registration Date</th>
-            <th>Favorite Genre</th>
-            <th>Premium</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+<div class="catalog-index-page catalog-accent-users">
+    <section class="catalog-hero">
+        <div class="catalog-hero-copy">
+            <p class="mb-eyebrow">Admin</p>
+            <h1>Users</h1>
+            <p>Keep listener accounts, memberships and music preferences organized.</p>
+        </div>
+        <div class="catalog-hero-stat">
+            <strong>@Model.Count</strong>
+            <span>users</span>
+        </div>
+    </section>
+
+    <div class="index-toolbar">
+        <div class="search-box">
+            <span class="search-box-icon" aria-hidden="true"></span>
+            <input type="text" id="searchInput" placeholder="Search users or emails..." autocomplete="off" aria-label="Search users or emails" />
+            <div id="searchResults" class="search-results-list"></div>
+        </div>
+        <div class="index-toolbar-actions">
+            <a asp-action="Create" class="mb-btn mb-btn-primary">+ Add User</a>
+        </div>
+    </div>
+
+    <div id="mainList" class="catalog-card-grid user-card-grid fade-in-list">
         @foreach (var user in Model)
         {
-            <tr>
-                <td>@user.Username</td>
-                <td>@user.Email</td>
-                <td>@user.RegistrationDate.ToShortDateString()</td>
-                <td>@user.FavoriteGenreName</td>
-                <td>@(user.IsPremium ? "Yes" : "No")</td>
-                <td>
-                    <a asp-controller="User" asp-action="Details" asp-route-id="@user.UserId">
-                        Details
-                    </a>
-                </td>
-            </tr>
+            <article class="catalog-card user-catalog-card" data-id="@user.UserId">
+                <div class="user-card-header">
+                    <div class="user-card-avatar">@user.Username.Substring(0, 1).ToUpper()</div>
+                    <div class="user-card-identity">
+                        <h3>@user.Username</h3>
+                        <p>@user.Email</p>
+                    </div>
+                    <span class="membership-chip @(user.IsPremium ? "is-premium" : "is-free")">
+                        @(user.IsPremium ? "Premium" : "Free")
+                    </span>
+                </div>
+                <div class="user-card-details">
+                    <div>
+                        <span>Favorite genre</span>
+                        <strong>@(string.IsNullOrWhiteSpace(user.FavoriteGenreName) ? "Not selected" : user.FavoriteGenreName)</strong>
+                    </div>
+                    <div>
+                        <span>Member since</span>
+                        <strong>@user.RegistrationDate.ToString("MMM yyyy")</strong>
+                    </div>
+                </div>
+                <div class="catalog-card-actions">
+                    <a asp-action="Details" asp-route-id="@user.UserId" class="mb-btn mb-btn-ghost btn-sm">Details</a>
+                    <a asp-action="Edit" asp-route-id="@user.UserId" class="mb-btn mb-btn-secondary btn-sm">Edit</a>
+                    <form asp-action="Delete" asp-route-id="@user.UserId" method="post" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="mb-btn mb-btn-danger btn-sm"
+                                onclick="return confirm('Delete user \'@user.Username\'?')">Delete</button>
+                    </form>
+                </div>
+            </article>
         }
-    </tbody>
-</table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var $input = $("#searchInput");
+            var $results = $("#searchResults");
+            var searchTimeout;
+
+            function escapeHtml(value) {
+                return $("<div>").text(value == null ? "" : value).html();
+            }
+
+            $input.on("input", function () {
+                clearTimeout(searchTimeout);
+                var term = $(this).val().trim();
+                if (term.length < 1) {
+                    $results.empty().hide();
+                    return;
+                }
+
+                $results.html('<div class="search-skeleton"><span></span><span></span><span></span></div>').show();
+
+                searchTimeout = setTimeout(function () {
+                    $.get("@Url.Action("Search", "User")", { term: term }, function (data) {
+                        if (!data.length) {
+                            $results.html('<div class="search-empty">No users found.</div>');
+                            return;
+                        }
+
+                        var html = data.map(function (user) {
+                            return '<a class="search-result-item" href="/User/Details/' + user.id + '">' +
+                                '<strong>' + escapeHtml(user.username) + '</strong>' +
+                                '<span>' + escapeHtml(user.email) + ' \u00b7 ' + escapeHtml(user.premium) + '</span></a>';
+                        }).join("");
+                        $results.html(html).show();
+                    });
+                }, 300);
+            });
+
+            $(document).on("click", function (event) {
+                if (!$(event.target).closest(".search-box").length) {
+                    $results.hide();
+                }
+            });
+        });
+    </script>
+}

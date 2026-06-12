@@ -1,7 +1,26 @@
 @model Artist
+@using System.Text.Json
 
 @{
     ViewData["Title"] = Model.StageName;
+
+    string GenreColor(string? g) => g?.ToLower() switch {
+        "sludge metal" => "#8b1a1a",
+        "hip hop"      => "#c8960a",
+        "techno"       => "#1a4a8b",
+        "rock"         => "#1a5c2a",
+        "heavy metal"  => "#4a1a1a",
+        "electronic"   => "#0a2a4a",
+        _              => "#ff8a1f"
+    };
+
+    var artistQueue = JsonSerializer.Serialize((Model.Songs ?? new List<Song>()).Select(s => new {
+        id         = s.SongId,
+        title      = s.Title,
+        artist     = Model.StageName,
+        audioUrl   = s.AudioUrl ?? "",
+        coverColor = GenreColor(s.Genre?.Name)
+    }));
 }
 
 <section class="artist-profile-hero">
@@ -12,7 +31,6 @@
     <div class="artist-profile-info">
         <p class="mb-eyebrow">Artist</p>
         <h1>@Model.StageName</h1>
-
         <p class="artist-bio">@Model.Biography</p>
 
         <div class="artist-meta-row">
@@ -22,6 +40,13 @@
             <span>@Model.Albums.Count albums</span>
             <span>@Model.Songs.Count songs</span>
         </div>
+
+        @if (Model.Songs != null && Model.Songs.Any())
+        {
+            <button class="mb-btn mb-btn-primary js-play-all-btn mt-3" data-queue="@artistQueue">
+                ▶ Play All
+            </button>
+        }
     </div>
 </section>
 
@@ -38,15 +63,13 @@
         <div class="artist-album-grid">
             @foreach (var album in Model.Albums)
             {
-                var coverName = album.Title.Replace(" ", "") + ".jpg";
-
                 <a asp-controller="Album" asp-action="Details" asp-route-id="@album.AlbumId" class="mb-album-card">
-                    <img src="~/images/albums/@coverName"
-                         alt="@album.Title cover"
-                         onerror="this.src='/images/albums/placeholder.jpg'" />
-                    <h3>@album.Title</h3>
-                    <p>@album.ReleaseDate.Year · @album.Label</p>
-                    <span>@album.Rating ★</span>
+                    @await Html.PartialAsync("_AlbumCover", album)
+                    <div class="mb-album-card-info">
+                        <h3>@album.Title</h3>
+                        <p>@album.ReleaseDate.Year · @album.Label</p>
+                        <span>@album.Rating ★</span>
+                    </div>
                 </a>
             }
         </div>
@@ -69,23 +92,39 @@
     {
         <div class="tracklist">
             @{
-                var index = 1;
+                int trackNum = 1;
             }
-
             @foreach (var song in Model.Songs)
             {
-                <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId" class="track-row">
-                    <span class="track-number">@index</span>
+                var sj = JsonSerializer.Serialize(new {
+                    id         = song.SongId,
+                    title      = song.Title,
+                    artist     = Model.StageName,
+                    audioUrl   = song.AudioUrl ?? "",
+                    coverColor = GenreColor(song.Genre?.Name)
+                });
+
+                <article class="track-row" data-song-id="@song.SongId">
+                    <div class="track-num-play">
+                        <span class="track-number">@trackNum</span>
+                        <div class="eq-bars"><span></span><span></span><span></span><span></span></div>
+                        <button class="play-btn js-play-btn" data-song="@sj" title="Play @song.Title">
+                            <span class="play-icon">▶</span>
+                        </button>
+                    </div>
 
                     <div class="track-main">
-                        <h3>@song.Title</h3>
-                        <p>@song.Genre.Name · @song.Duration · @song.PlayCount plays</p>
+                        <h3>@song.Title @if (song.IsExplicit) { <span class="explicit-badge">E</span> }</h3>
+                        <p>@song.Genre?.Name · @song.Duration · @song.PlayCount plays</p>
                     </div>
 
                     <span class="track-duration">@song.Mood</span>
-                </a>
 
-                index++;
+                    <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId"
+                       class="mb-btn mb-btn-ghost btn-sm track-details-link">Details</a>
+                </article>
+
+                trackNum++;
             }
         </div>
     }
@@ -95,8 +134,13 @@
     }
 </section>
 
-<p class="mt-4">
+<div class="details-actions mt-4">
+    <a asp-action="Edit" asp-route-id="@Model.ArtistId" class="mb-btn mb-btn-secondary">Edit Artist</a>
+    <form asp-action="Delete" asp-route-id="@Model.ArtistId" method="post" class="inline-form">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="mb-btn mb-btn-danger"
+                onclick="return confirm('Delete artist \'@Model.StageName\'?')">Delete Artist</button>
+    </form>
+    <a asp-action="Index" class="mb-btn mb-btn-ghost">All Artists</a>
     <a asp-controller="Home" asp-action="Index" class="mb-btn mb-btn-ghost">Home</a>
-    <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Library</a>
-    <a asp-controller="Discover" asp-action="Index" class="mb-btn mb-btn-ghost">Discover</a>
-</p>
+</div>

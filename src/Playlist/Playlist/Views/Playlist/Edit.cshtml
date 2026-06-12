@@ -4,13 +4,18 @@
     ViewData["Title"] = "Edit Playlist";
 }
 
-<section class="library-hero">
-    <p class="mb-eyebrow">Edit playlist</p>
-
-    <h1>@Model.Name</h1>
-
-    <p>Update playlist name, description and visibility.</p>
-</section>
+<div class="admin-page">
+<aside class="admin-aside">
+    <div class="admin-aside-card">
+        <div class="admin-aside-icon">✏️</div>
+        <h3>@Model.Name</h3>
+        <p>@(Model.IsPublic ? "Public" : "Private") · @Model.Songs?.Count songs</p>
+    </div>
+    <nav class="admin-aside-links">
+        <a asp-controller="Playlist" asp-action="Details" asp-route-id="@Model.PlaylistId">← Back to playlist</a>
+        <a asp-controller="Playlist" asp-action="Index">All Playlists</a>
+    </nav>
+</aside>
 
 <form asp-controller="Playlist"
       asp-action="Edit"
@@ -55,18 +60,11 @@
     </div>
 
     <div class="playlist-create-actions">
-        <button type="submit" class="mb-btn mb-btn-primary">
-            Save Changes
-        </button>
-
-        <a asp-controller="Playlist"
-           asp-action="Details"
-           asp-route-id="@Model.PlaylistId"
-           class="mb-btn mb-btn-ghost">
-            Cancel
-        </a>
+        <button type="submit" class="mb-btn mb-btn-primary">Save Changes</button>
+        <a asp-controller="Playlist" asp-action="Details" asp-route-id="@Model.PlaylistId" class="mb-btn mb-btn-ghost">Cancel</a>
     </div>
 </form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

@@ -29,5 +29,20 @@ namespace Playlist.Controllers
 
             return View(historyItem);
         }
+
+        [HttpGet]
+        public IActionResult Search(string term)
+        {
+            if (string.IsNullOrWhiteSpace(term))
+                return Json(new List<object>());
+
+            var results = _listeningHistoryRepository.Search(term);
+            return Json(results.Select(h => new
+            {
+                id = h.ListeningHistoryId,
+                text = h.Song.Title,
+                subtitle = $"{h.User.Username} · {h.Song.Artist.StageName} · {h.ListenedAt:dd.MM.yyyy}"
+            }));
+        }
     }
 }

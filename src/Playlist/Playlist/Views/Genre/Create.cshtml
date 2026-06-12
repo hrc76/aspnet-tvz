@@ -1,0 +1,44 @@
+@model Genre
+@using Playlist.Models
+
+@{
+    ViewData["Title"] = "Add Genre";
+}
+
+<div class="admin-page">
+<aside class="admin-aside">
+    <div class="admin-aside-card">
+        <div class="admin-aside-icon">⬡</div>
+        <h3>New Genre</h3>
+        <p>Define a new sound zone for the catalogue. Songs and artists will be organized under this genre.</p>
+    </div>
+    <nav class="admin-aside-links">
+        <a asp-action="Index">← All Genres</a>
+    </nav>
+</aside>
+
+<form asp-action="Create" method="post" class="account-form crud-form fade-in-form">
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        <label asp-for="Name">Genre Name</label>
+        <input asp-for="Name" class="mb-input" placeholder="e.g. Sludge Metal" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Description">Description</label>
+        <textarea asp-for="Description" class="mb-input" rows="5" placeholder="Describe this genre..."></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="playlist-create-actions">
+        <button type="submit" class="mb-btn mb-btn-primary">Add Genre</button>
+        <a asp-action="Index" class="mb-btn mb-btn-ghost">Cancel</a>
+    </div>
+</form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

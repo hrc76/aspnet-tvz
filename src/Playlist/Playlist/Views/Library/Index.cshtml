@@ -1,23 +1,43 @@
 @using Playlist.ViewModels
+@using Playlist.Models
+@using System.Text.Json
 @model LibraryViewModel
 
 @{
     ViewData["Title"] = "Library";
+
+    string SongJson(Song s) => JsonSerializer.Serialize(new {
+        id         = s.SongId,
+        title      = s.Title,
+        artist     = s.Artist?.StageName ?? "",
+        audioUrl   = s.AudioUrl ?? "",
+        coverColor = "#ff8a1f"
+    });
+
+    string CoverGrad(string name) {
+        int h = ((name.GetHashCode() % 360) + 360) % 360;
+        return $"linear-gradient(135deg, hsl({h},62%,20%), hsl({(h + 45) % 360},55%,12%))";
+    }
 }
 
-<section class="library-hero">
-    <p class="mb-eyebrow">Your collection</p>
-    <h1>Library</h1>
-    <p>Favorite songs, saved albums and playlists in one place.</p>
+<div class="library-page">
+    <section class="library-hero">
+        <p class="mb-eyebrow">Your collection</p>
+        <h1>Library</h1>
+        <p>Favorite songs, saved albums and playlists in one place.</p>
 
-   <div class="library-tools">
-    <input id="librarySearch" type="text" placeholder="Search your library..." />
-
-    <button type="button" class="library-filter active" data-type="all">All</button>
-    <button type="button" class="library-filter" data-type="albums">Albums</button>
-    <button type="button" class="library-filter" data-type="playlists">Playlists</button>
-</div>
-</section>
+        <div class="library-tools">
+            <div class="library-search-box">
+                <span class="search-box-icon" aria-hidden="true"></span>
+                <input id="librarySearch" type="text" placeholder="Search your library..." autocomplete="off" />
+            </div>
+            <div class="library-filter-group" aria-label="Filter library">
+                <button type="button" class="library-filter active" data-type="all">All</button>
+                <button type="button" class="library-filter" data-type="albums">Albums</button>
+                <button type="button" class="library-filter" data-type="playlists">Playlists</button>
+            </div>
+        </div>
+    </section>
 
 <section id="favoriteSongsSection" class="mb-section">
     <div class="mb-section-header">
@@ -25,50 +45,77 @@
             <p class="mb-eyebrow">Pinned tracks</p>
             <h2>Favorite Songs</h2>
         </div>
-    </div>
-
-    <div class="mb-song-list">
-        @foreach (var song in Model.FavoriteSongs)
+        @if (Model.FavoriteSongs.Any())
         {
-            <article class="mb-song-row">
-                <div class="mb-play-dot">▶</div>
-
-                <div>
-                    <h3>@song.Title</h3>
-                    <p>@song.Artist.StageName · @song.Genre.Name · @song.Duration</p>
-                </div>
-
-                <span>@song.PlayCount plays</span>
-
-                <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId">
-                    Listen
-                </a>
-            </article>
+            <button type="button" class="mb-btn mb-btn-ghost btn-sm js-play-all-btn"
+                    data-queue="@JsonSerializer.Serialize(Model.FavoriteSongs.Select(s => new { id = s.SongId, title = s.Title, artist = s.Artist != null ? s.Artist.StageName : "", audioUrl = s.AudioUrl ?? "", coverColor = "#ff8a1f" }))">
+                ▶ Play All
+            </button>
         }
     </div>
+
+    @if (Model.FavoriteSongs.Any())
+    {
+        <div class="mb-song-list">
+            @foreach (var song in Model.FavoriteSongs)
+            {
+                <article class="track-row" data-song-id="@song.SongId">
+                    <div class="track-num-play">
+                        <span class="eq-bars"><span></span><span></span><span></span><span></span></span>
+                        <button type="button" class="js-play-btn track-play-btn" data-song="@SongJson(song)">▶</button>
+                    </div>
+                    <div class="track-main">
+                        <h3>
+                            <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId" class="track-details-link">
+                                @song.Title
+                            </a>
+                        </h3>
+                        <p>@song.Artist.StageName · @song.Genre.Name · @song.Duration</p>
+                    </div>
+                    <span class="track-duration">@song.PlayCount plays</span>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="mb-muted">No favorite songs yet. Open a song and add it to favorites.</p>
+    }
 </section>
 
 <section id="libraryResultsSection" class="mb-section">
     <div class="mb-section-header">
         <div>
             <p class="mb-eyebrow">Saved items</p>
-            <h2>Albums & Playlists</h2>
+            <h2>Albums &amp; Playlists</h2>
         </div>
-
-        <a asp-controller="Playlist" asp-action="Create">+ Create Playlist</a>
+        <a asp-controller="Playlist" asp-action="Create" class="mb-btn mb-btn-primary">+ Create Playlist</a>
     </div>
 
     <div id="libraryGrid" class="library-grid">
         @foreach (var item in Model.LibraryItems)
         {
+            string lGrad = CoverGrad(item.Title);
+            string lSearch = item.Type == "Album" ? Uri.EscapeDataString(item.Title + " " + item.Subtitle) : "";
             <a asp-controller="@item.ControllerName"
                asp-action="Details"
                asp-route-id="@item.Id"
                class="library-card">
 
-                <img src="@item.ImagePath"
-                     alt="@item.Title"
-                     onerror="this.src='/images/albums/placeholder.jpg'" />
+                @if (item.Type == "Album")
+                {
+                    <div class="album-cover-wrap"
+                         style="background:@lGrad"
+                         data-album-search="@lSearch">
+                        <span class="album-cover-letter">@item.Title.Substring(0, 1).ToUpper()</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="album-cover-wrap" style="background:@lGrad">
+                        <span class="album-cover-letter">@item.Title.Substring(0, 1).ToUpper()</span>
+                    </div>
+                }
 
                 <div class="library-card-body">
                     <span class="library-type">@item.Type</span>
@@ -80,86 +127,60 @@
         }
     </div>
 </section>
+</div>
+
 @section Scripts {
     <script>
         $(function () {
             let currentType = "all";
+            let searchTimeout;
+
+            function coverHtml(title, subtitle, type) {
+                var seed = 0;
+                for (var i = 0; i < title.length; i++) seed += title.charCodeAt(i);
+                var h = ((seed % 360) + 360) % 360;
+                var h2 = (h + 45) % 360;
+                var grad = 'linear-gradient(135deg, hsl(' + h + ',62%,20%), hsl(' + h2 + ',55%,12%))';
+                var letter = (title || '?').charAt(0).toUpperCase();
+                var searchAttr = type === 'Album' ? ' data-album-search="' + encodeURIComponent(title + ' ' + subtitle) + '"' : '';
+                return '<div class="album-cover-wrap" style="background:' + grad + '"' + searchAttr + '>' +
+                       '<span class="album-cover-letter">' + letter + '</span></div>';
+            }
 
             function loadLibraryItems() {
-                const term = $("#librarySearch").val() || "";
-
+                var term = $("#librarySearch").val() || "";
                 $.ajax({
                     url: "/Library/Search",
                     method: "GET",
-                    data: {
-                        term: term,
-                        type: currentType
-                    },
+                    data: { term: term, type: currentType },
                     success: function (data) {
-                        let html = "";
-
+                        var html = "";
                         data.forEach(function (item) {
-                            html += `
-                                <a href="${item.url}" class="library-card">
-                                    <img src="${item.imagePath}"
-                                         alt="${item.title}"
-                                         onerror="this.src='/images/albums/placeholder.jpg'" />
-
-                                    <div class="library-card-body">
-                                        <span class="library-type">${item.type}</span>
-                                        <h3>${item.title}</h3>
-                                        <p>${item.subtitle}</p>
-                                        <small>${item.meta}</small>
-                                    </div>
-                                </a>`;
+                            html += '<a href="' + item.url + '" class="library-card">' +
+                                coverHtml(item.title, item.subtitle, item.type) +
+                                '<div class="library-card-body">' +
+                                '<span class="library-type">' + item.type + '</span>' +
+                                '<h3>' + item.title + '</h3>' +
+                                '<p>' + item.subtitle + '</p>' +
+                                '<small>' + item.meta + '</small></div></a>';
                         });
-
-                        if (html === "") {
-                            html = `<p class="empty-search-message">No results found.</p>`;
-                        }
-
+                        if (!html) html = '<p class="mb-muted">No results found.</p>';
                         $("#libraryGrid").html(html);
-
-                        if (term.length > 0 || currentType !== "all") {
-                            $("#favoriteSongsSection").hide();
-                        } else {
-                            $("#favoriteSongsSection").show();
-                        }
-                    },
-                    error: function () {
-                        console.log("Library search failed.");
+                        if (typeof window.fetchAlbumArt === 'function') window.fetchAlbumArt();
                     }
                 });
             }
 
             $("#librarySearch").on("input", function () {
-                loadLibraryItems();
-
-                const results = document.getElementById("libraryResultsSection");
-
-                if (results) {
-                    results.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
-                    });
-                }
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(loadLibraryItems, 250);
             });
 
             $(".library-filter").on("click", function () {
                 $(".library-filter").removeClass("active");
                 $(this).addClass("active");
-
                 currentType = $(this).data("type");
                 loadLibraryItems();
-
-                const results = document.getElementById("libraryResultsSection");
-
-                if (results) {
-                    results.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
-                    });
-                }
             });
         });
     </script>

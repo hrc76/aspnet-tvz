@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "JGxjnIvJjS1gr6qgAGi5bzQcxZuJIFjfcOr0PziqG/8=",
+  "Hash": "TMN/59HCh6GTa+MfVXVQHYhS1okcxEEgFwilJdR/VDM=",
   "Source": "Playlist",
   "BasePath": "_content/Playlist",
   "Mode": "Default",
@@ -287,6 +287,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\playlists\\SludgeDoomVibes.jpg"
+    },
+    {
+      "Identity": "C:\\Users\\drvoj\\Documents\\GitHub\\aspnet-tvz\\src\\Playlist\\Playlist\\wwwroot\\js\\player.js",
+      "SourceId": "Playlist",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\drvoj\\Documents\\GitHub\\aspnet-tvz\\src\\Playlist\\Playlist\\wwwroot\\",
+      "BasePath": "_content/Playlist",
+      "RelativePath": "js/player.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\player.js"
     },
     {
       "Identity": "C:\\Users\\drvoj\\Documents\\GitHub\\aspnet-tvz\\src\\Playlist\\Playlist\\wwwroot\\js\\site.js",
@@ -1273,6 +1290,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\lib\\jquery-validation-unobtrusive\\LICENSE.txt"
+    },
+    {
+      "Identity": "C:\\Users\\drvoj\\Documents\\GitHub\\aspnet-tvz\\src\\Playlist\\Playlist\\wwwroot\\uploads\\profile-images\\45427521-c8ab-4774-bd2f-27cccee9d9c2_b9cbbf85735949f4804f0521b02a2a3f.jpg",
+      "SourceId": "Playlist",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\drvoj\\Documents\\GitHub\\aspnet-tvz\\src\\Playlist\\Playlist\\wwwroot\\",
+      "BasePath": "_content/Playlist",
+      "RelativePath": "uploads/profile-images/45427521-c8ab-4774-bd2f-27cccee9d9c2_b9cbbf85735949f4804f0521b02a2a3f.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\profile-images\\45427521-c8ab-4774-bd2f-27cccee9d9c2_b9cbbf85735949f4804f0521b02a2a3f.jpg"
     }
   ]
 }

@@ -1,20 +1,37 @@
 @model Song
+@using System.Text.Json
 
 @{
     ViewData["Title"] = Model.Title;
-    string coverName = Model.Album.Title.Replace(" ", "") + ".jpg";
+
+    string coverColor = (Model.Genre?.Name)?.ToLower() switch {
+        "sludge metal" => "#8b1a1a",
+        "hip hop"      => "#c8960a",
+        "techno"       => "#1a4a8b",
+        "rock"         => "#1a5c2a",
+        "heavy metal"  => "#4a1a1a",
+        "electronic"   => "#0a2a4a",
+        _              => "#ff8a1f"
+    };
+
+    var songJson = System.Text.Json.JsonSerializer.Serialize(new {
+        id         = Model.SongId,
+        title      = Model.Title,
+        artist     = Model.Artist.StageName,
+        audioUrl   = Model.AudioUrl ?? "",
+        coverColor = coverColor
+    });
 }
 
-<section class="song-player-hero">
-    <div class="song-cover">
-        <img src="~/images/albums/@coverName"
-             alt="@Model.Album.Title cover"
-             onerror="this.src='/images/albums/placeholder.jpg'" />
+<section class="song-player-hero" data-song-id="@Model.SongId">
+
+    <div class="song-cover-dyn" style="background: linear-gradient(135deg, @coverColor, rgba(0,0,0,0.7))">
+        <span class="dyn-cover-letter" style="font-size:4.5rem">@Model.Title.Substring(0,1).ToUpper()</span>
     </div>
 
     <div class="song-player-info">
-        <p class="mb-eyebrow">Now playing</p>
-        <h1>@Model.Title</h1>
+        <p class="mb-eyebrow">Track</p>
+        <h1>@Model.Title @if (Model.IsExplicit) { <span class="explicit-badge">E</span> }</h1>
 
         <p class="song-byline">
             by
@@ -32,39 +49,50 @@
             <span>@Model.Mood</span>
             <span>@Model.Duration</span>
             <span>@Model.PlayCount plays</span>
-            <span>@Model.PopularityScore score</span>
-            <span>@(Model.IsExplicit ? "Explicit" : "Clean")</span>
+            <span>★ @Model.PopularityScore</span>
         </div>
 
-        <div class="fake-audio-player">
-            <button type="button">▶</button>
-            <div class="fake-wave">
-                <span></span><span></span><span></span><span></span><span></span>
-                <span></span><span></span><span></span><span></span><span></span>
-            </div>
-            <small>@Model.Duration</small>
+        <div class="song-hero-actions">
+            <button class="js-play-btn mb-btn mb-btn-primary" data-song="@songJson" style="gap:0.6rem">
+                <span class="eq-bars" style="margin-right:0.25rem"><span></span><span></span><span></span><span></span></span>
+                <span class="play-icon">▶ Preview</span>
+            </button>
+
+            <a href="https://open.spotify.com/search/@Uri.EscapeDataString(Model.Title + " " + Model.Artist.StageName)"
+               target="_blank" rel="noopener noreferrer" class="mb-btn stream-btn stream-spotify">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                Spotify
+            </a>
+
+            <a href="https://www.youtube.com/results?search_query=@Uri.EscapeDataString(Model.Title + " " + Model.Artist.StageName + " official")"
+               target="_blank" rel="noopener noreferrer" class="mb-btn stream-btn stream-youtube">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+                YouTube
+            </a>
         </div>
 
         <div class="record-actions">
             @if (ViewBag.IsFavorite == true)
             {
-                <form asp-controller="Favorite" asp-action="Remove" method="post">
+                <form asp-controller="Favorite" asp-action="Remove" method="post" class="favorite-toggle-form">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="songId" value="@Model.SongId" />
 
-                    <button type="submit" class="mb-btn mb-btn-danger">
-                        Remove Favorite
+                    <button type="submit" class="favorite-star is-favorite"
+                            title="Remove from favorites" aria-label="Remove from favorites">
+                        <span aria-hidden="true">&#9733;</span>
                     </button>
                 </form>
             }
             else
             {
-                <form asp-controller="Favorite" asp-action="Add" method="post">
+                <form asp-controller="Favorite" asp-action="Add" method="post" class="favorite-toggle-form">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="songId" value="@Model.SongId" />
 
-                    <button type="submit" class="mb-btn mb-btn-primary">
-                        Add to Favorites
+                    <button type="submit" class="favorite-star"
+                            title="Add to favorites" aria-label="Add to favorites">
+                        <span aria-hidden="true">&#9734;</span>
                     </button>
                 </form>
             }
@@ -78,19 +106,22 @@
                 <input type="hidden" name="songId" value="@Model.SongId" />
                 <input type="hidden" name="playlistId" id="selectedPlaylistId" />
 
-                <div class="autocomplete-box">
-                    <label>Add to playlist</label>
+                <div class="autocomplete-box playlist-picker">
+                    <label for="playlistAutocomplete">Add to playlist</label>
 
                     <input id="playlistAutocomplete"
                            type="text"
                            class="mb-input"
-                           placeholder="Search playlist..." />
+                           placeholder="Search your playlists..."
+                           autocomplete="off"
+                           aria-controls="playlistAutocompleteResults"
+                           aria-expanded="false" />
 
                     <div id="playlistAutocompleteResults" class="autocomplete-results"></div>
                 </div>
 
-                <button type="submit" class="mb-btn mb-btn-primary">
-                    Add to Playlist
+                <button type="submit" id="addToPlaylistButton" class="mb-btn mb-btn-primary playlist-add-button" disabled>
+                    Add
                 </button>
             </form>
         </div>
@@ -126,60 +157,95 @@
     </article>
 </section>
 
-<p class="mt-4">
+<div class="details-actions mt-4">
+    <a asp-action="Edit" asp-route-id="@Model.SongId" class="mb-btn mb-btn-secondary">Edit Song</a>
+    <form asp-action="Delete" asp-route-id="@Model.SongId" method="post" class="inline-form">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="mb-btn mb-btn-danger"
+                onclick="return confirm('Delete \'@Model.Title\'?')">Delete Song</button>
+    </form>
+    <a asp-action="Index" class="mb-btn mb-btn-ghost">All Songs</a>
     <a asp-controller="Home" asp-action="Index" class="mb-btn mb-btn-ghost">Home</a>
-    <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Library</a>
-    <a asp-controller="Discover" asp-action="Index" class="mb-btn mb-btn-ghost">Discover</a>
-</p>
+</div>
 
 @section Scripts {
     <script>
         $(function () {
-            $("#playlistAutocomplete").on("input", function () {
-                const term = $(this).val();
+            const $input = $("#playlistAutocomplete");
+            const $results = $("#playlistAutocompleteResults");
+            const $selectedId = $("#selectedPlaylistId");
+            const $addButton = $("#addToPlaylistButton");
+            let searchTimeout;
+            let activeRequest;
 
-                if (term.length < 1) {
-                    $("#playlistAutocompleteResults").empty();
-                    $("#selectedPlaylistId").val("");
-                    return;
+            function escapeHtml(value) {
+                return $("<div>").text(value == null ? "" : value).html();
+            }
+
+            function searchPlaylists() {
+                const term = $input.val().trim();
+                $selectedId.val("");
+                $addButton.prop("disabled", true);
+
+                if (activeRequest) {
+                    activeRequest.abort();
                 }
 
-                $.ajax({
+                $results.html('<div class="autocomplete-empty">Searching...</div>');
+                $input.attr("aria-expanded", "true");
+
+                activeRequest = $.ajax({
                     url: "/Playlist/SearchUserPlaylists",
                     method: "GET",
                     data: { term: term },
                     success: function (data) {
-                        let html = "";
+                        if (!data.length) {
+                            $results.html('<div class="autocomplete-empty">No playlists found.</div>');
+                            return;
+                        }
 
-                        data.forEach(function (item) {
-                            html += `
-                                <button type="button"
-                                        class="autocomplete-item"
-                                        data-id="${item.id}"
-                                        data-text="${item.text}">
-                                    <strong>${item.text}</strong>
-                                    <span>${item.subtitle}</span>
-                                </button>`;
-                        });
+                        const html = data.map(function (item) {
+                            return '<button type="button" class="autocomplete-item" data-id="' + item.id + '">' +
+                                '<strong>' + escapeHtml(item.text) + '</strong>' +
+                                '<span>' + escapeHtml(item.subtitle) + '</span></button>';
+                        }).join("");
 
-                        $("#playlistAutocompleteResults").html(html);
+                        $results.html(html);
                     }
                 });
+            }
+
+            $input.on("input", function () {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(searchPlaylists, 250);
+            });
+
+            $input.on("focus", function () {
+                searchPlaylists();
             });
 
             $(document).on("click", ".autocomplete-item", function () {
                 const id = $(this).data("id");
-                const text = $(this).data("text");
+                const text = $(this).find("strong").text();
 
-                $("#selectedPlaylistId").val(id);
-                $("#playlistAutocomplete").val(text);
-                $("#playlistAutocompleteResults").empty();
+                $selectedId.val(id);
+                $input.val(text).attr("aria-expanded", "false");
+                $results.empty();
+                $addButton.prop("disabled", false);
             });
 
             $(".autocomplete-form").on("submit", function (e) {
-                if (!$("#selectedPlaylistId").val()) {
+                if (!$selectedId.val()) {
                     e.preventDefault();
-                    alert("Please select a playlist first.");
+                    $input.focus();
+                    searchPlaylists();
+                }
+            });
+
+            $(document).on("click", function (event) {
+                if (!$(event.target).closest(".playlist-picker").length) {
+                    $results.empty();
+                    $input.attr("aria-expanded", "false");
                 }
             });
         });

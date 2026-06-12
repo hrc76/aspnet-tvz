@@ -19,6 +19,7 @@ namespace Playlist.Data
         public DbSet<ListeningHistory> ListeningHistories => Set<ListeningHistory>();
         public DbSet<FavoriteSong> FavoriteSongs => Set<FavoriteSong>();
         public DbSet<SavedAlbum> SavedAlbums => Set<SavedAlbum>();
+        public DbSet<PlaylistAttachment> PlaylistAttachments => Set<PlaylistAttachment>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -112,6 +113,12 @@ namespace Playlist.Data
                 .WithMany()
                 .HasForeignKey(s => s.AlbumId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PlaylistAttachment>()
+                .HasOne(a => a.Playlist)
+                .WithMany(p => p.Attachments)
+                .HasForeignKey(a => a.PlaylistId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

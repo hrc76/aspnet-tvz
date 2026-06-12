@@ -1,0 +1,65 @@
+@model global::Playlist.Controllers.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="auth-page auth-register-page">
+    <section class="auth-intro">
+        <p class="mb-eyebrow">Join MusicBar</p>
+        <h1>Build your music space.</h1>
+        <p>Create playlists, save favorite tracks and keep your listening history in one place.</p>
+        <div class="auth-visual" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
+    </section>
+
+    <form asp-action="Register" method="post" class="account-form auth-form register-form">
+        <div class="auth-form-heading">
+            <span>New account</span>
+            <h2>Register</h2>
+            <p>Enter your details to create a MusicBar account.</p>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Email"></label>
+            <input asp-for="Email" class="mb-input" autocomplete="email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="register-password-grid">
+            <div class="form-group">
+                <label asp-for="Password"></label>
+                <input asp-for="Password" class="mb-input" autocomplete="new-password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ConfirmPassword"></label>
+                <input asp-for="ConfirmPassword" class="mb-input" autocomplete="new-password" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="register-id-grid">
+            <div class="form-group">
+                <label asp-for="OIB"></label>
+                <input asp-for="OIB" class="mb-input" inputmode="numeric" />
+                <span asp-validation-for="OIB" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="JMBG"></label>
+                <input asp-for="JMBG" class="mb-input" inputmode="numeric" />
+                <span asp-validation-for="JMBG" class="text-danger"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="mb-btn mb-btn-primary auth-submit">Create account</button>
+        <p class="auth-switch">Already have an account? <a asp-action="Login">Log in</a></p>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

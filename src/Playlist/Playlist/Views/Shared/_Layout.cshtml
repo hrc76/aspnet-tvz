@@ -1,103 +1,244 @@
-﻿@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Identity
+@using Playlist.Models
+@inject UserManager<AppUser> UserManager
+@inject global::Playlist.Repositories.UserRepository UserRepository
 
 @{
-    var username = Context.Session.GetString("Username");
+    var username = User.Identity?.IsAuthenticated == true
+        ? User.Identity?.Name
+        : null;
+    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var currentAppUser = User.Identity?.IsAuthenticated == true
+        ? await UserManager.GetUserAsync(User)
+        : null;
+    var profileImageUrl = currentAppUser?.ProfileImageUrl;
+    var domainUser = !string.IsNullOrWhiteSpace(currentAppUser?.Email)
+        ? UserRepository.GetByEmail(currentAppUser.Email)
+        : null;
+    var displayName = domainUser?.Username ?? username;
+
+    string NavClass(string c, string a = "Index") =>
+        ctrl.Equals(c, StringComparison.OrdinalIgnoreCase) ? "sidebar-link active" : "sidebar-link";
 }
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - MusicBar</title>
+    <title>@ViewData["Title"] — MusicBar</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/Playlist.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 </head>
 <body>
-    <div class="app-shell">
-        <header>
-            <nav class="navbar navbar-expand-lg app-navbar">
-                <div class="container-fluid">
-                    <a class="navbar-brand app-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                        <span class="brand-mark">♪</span>
-                        MusicBar
-                    </a>
 
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
-                            aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
+<div class="app-shell">
+
+    <!-- ══ SIDEBAR ══════════════════════════════════════════ -->
+    <aside class="app-sidebar" id="appSidebar">
+
+        <div class="sidebar-brand">
+            <a asp-controller="Home" asp-action="Index">
+                <span class="brand-mark">♪</span>
+                MusicBar
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <!-- Main navigation -->
+            <div class="sidebar-section">
+                <a asp-controller="Home" asp-action="Index"
+                   class="@NavClass("Home")">
+                    <span class="nav-icon">⌂</span> Home
+                </a>
+                <a asp-controller="Discover" asp-action="Index"
+                   class="@NavClass("Discover")">
+                    <span class="nav-icon">◎</span> Discover
+                </a>
+                <a asp-controller="Library" asp-action="Index"
+                   class="@NavClass("Library")">
+                    <span class="nav-icon">▤</span> Library
+                </a>
+            </div>
+
+            <!-- Admin CRUD -->
+            <div class="sidebar-section">
+                <p class="sidebar-label">Admin</p>
+                <a asp-controller="Song" asp-action="Index"
+                   class="@NavClass("Song")">
+                    <span class="nav-icon">♫</span> Songs
+                </a>
+                <a asp-controller="Artist" asp-action="Index"
+                   class="@NavClass("Artist")">
+                    <span class="nav-icon">★</span> Artists
+                </a>
+                <a asp-controller="Album" asp-action="Index"
+                   class="@NavClass("Album")">
+                    <span class="nav-icon">◉</span> Albums
+                </a>
+                <a asp-controller="Genre" asp-action="Index"
+                   class="@NavClass("Genre")">
+                    <span class="nav-icon">≋</span> Genres
+                </a>
+                <a asp-controller="User" asp-action="Index"
+                   class="@NavClass("User")">
+                    <span class="nav-icon">◈</span> Users
+                </a>
+            </div>
+
+            <!-- History -->
+            <div class="sidebar-section">
+                <a asp-controller="ListeningHistory" asp-action="Index"
+                   class="@NavClass("ListeningHistory")">
+                    <span class="nav-icon">≡</span> History
+                </a>
+                <a asp-controller="Playlist" asp-action="Index"
+                   class="@NavClass("Playlist")">
+                    <span class="nav-icon">⊞</span> Playlists
+                </a>
+            </div>
+
+        </nav>
+
+        <!-- User area at bottom -->
+        <div class="sidebar-user">
+            @if (!string.IsNullOrEmpty(username))
+            {
+                <a asp-controller="Account" asp-action="Profile" class="sidebar-profile-link" title="Open profile">
+                    <div class="sidebar-user-avatar">
+                        @if (!string.IsNullOrWhiteSpace(profileImageUrl))
+                        {
+                            <img src="@profileImageUrl" alt="" />
+                        }
+                        else
+                        {
+                            <span>@displayName!.Substring(0, 1).ToUpper()</span>
+                        }
+                    </div>
+                    <span class="sidebar-user-name">@displayName</span>
+                </a>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="sidebar-logout-form">
+                    <button type="submit" class="sidebar-user-logout" title="Sign out" aria-label="Sign out">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M10 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H10M14 8l4 4-4 4M18 12H9" />
+                        </svg>
                     </button>
+                </form>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="sidebar-link" style="width:100%">
+                    <span class="nav-icon">→</span> Sign In
+                </a>
+            }
+        </div>    </aside>
+    <!-- ══ MAIN CONTENT ══════════════════════════════════════ -->
+    <main class="app-main" id="appMain">
 
-                    <div class="collapse navbar-collapse" id="mainNavbar">
-                        <ul class="navbar-nav ms-auto align-items-center">
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Library" asp-action="Index">Library</a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Discover" asp-action="Index">Discover</a>
-                            </li>
-
-                            @if (string.IsNullOrEmpty(username))
-                                    {
-                                        <li class="nav-item">
-                                            <a class="nav-link nav-auth-link"
-                                                asp-controller="Account"
-                                                asp-action="SignIn">
-                                                    Sign In
-                                            </a>
-                                        </li>
-                                    }
-                            else
-{
-                                        <li class="nav-item">
-                                            <a class="nav-link"
-                                                asp-controller="Account"
-                                                asp-action="Profile">
-                                                @username
-                                            </a>
-                                        </li>
-
-                                        <li class="nav-item">
-                                            <a class="nav-link nav-auth-link"
-                                                asp-controller="Account"
-                                                asp-action="SignOut">
-                                                    Sign Out
-                                            </a>
-                                        </li>
-                                    }
-                        </ul>
+        <!-- Mobile topbar -->
+        <div class="app-topbar">
+            <button class="sidebar-toggle" id="sidebarToggle" title="Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <span class="topbar-title">@(ViewData["Title"]?.ToString() ?? "MusicBar")</span>
+            @if (!string.IsNullOrEmpty(username))
+            {
+                <div class="topbar-user">
+                    <div class="sidebar-user-avatar" style="width:1.8rem;height:1.8rem;font-size:0.75rem">
+                        @if (!string.IsNullOrWhiteSpace(profileImageUrl))
+                        {
+                            <img src="@profileImageUrl" alt="" />
+                        }
+                        else
+                        {
+                            <span>@displayName!.Substring(0, 1).ToUpper()</span>
+                        }
                     </div>
                 </div>
-            </nav>
-        </header>
+            }
+        </div>
 
-        <main role="main" class="app-main">
-            <div class="container app-container">
-                <div class="page-content">
-                    @RenderBody()
-                </div>
-            </div>
-        </main>
+        <div class="app-content">
+            @RenderBody()
+        </div>
 
-        
+    </main>
 
-        <footer class="border-top footer text-muted">
-            <div class="container">
-                &copy; 2026 - MusicBar - 
-                <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-            </div>
-        </footer>
+    <!-- Mobile sidebar overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+</div>
+
+<!-- ══ MUSIC PLAYER ══════════════════════════════════════════ -->
+<div class="mb-player" id="mbPlayer">
+
+    <!-- Left: track info -->
+    <div class="player-track-info">
+        <div class="player-cover" id="playerCover">
+            <span id="playerCoverLetter">♪</span>
+        </div>
+        <div class="player-meta">
+            <span class="player-title" id="playerTitle">—</span>
+            <span class="player-artist" id="playerArtist">Pick a song to play</span>
+        </div>
+        <button class="player-like" id="playerLike" title="Like">♡</button>
     </div>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <partial name="_ValidationScriptsPartial" />
-    @await RenderSectionAsync("Scripts", required: false)
+    <!-- Center: controls + progress -->
+    <div class="player-center">
+        <div class="player-btns">
+            <button id="playerShuffle" title="Shuffle">⇄</button>
+            <button id="playerPrev" title="Previous">⏮</button>
+            <button id="playerPlay" class="player-play-main" title="Play / Pause">▶</button>
+            <button id="playerNext" title="Next">⏭</button>
+            <button id="playerRepeat" title="Repeat">↺</button>
+        </div>
+        <div class="player-progress-row">
+            <span id="playerCurrentTime">0:00</span>
+            <input type="range" id="playerSeek" min="0" max="100" value="0" class="player-range" />
+            <span id="playerDuration">0:00</span>
+        </div>
+    </div>
+
+    <!-- Right: volume -->
+    <div class="player-right">
+        <button id="playerMute" title="Mute">🔊</button>
+        <input type="range" id="playerVolume" min="0" max="100" value="70" class="player-range player-vol-range" />
+    </div>
+
+</div>
+
+<!-- Hidden HTML5 audio engine -->
+<audio id="mbAudio" preload="none"></audio>
+
+<!-- Scripts -->
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="~/js/player.js" asp-append-version="true"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+<partial name="_ValidationScriptsPartial" />
+@await RenderSectionAsync("Scripts", required: false)
+
+<!-- Sidebar mobile toggle -->
+<script>
+    (function () {
+        var toggle = document.getElementById('sidebarToggle');
+        var sidebar = document.getElementById('appSidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+        if (toggle) toggle.addEventListener('click', function () {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('visible');
+        });
+        if (overlay) overlay.addEventListener('click', close);
+    })();
+</script>
+
 </body>
 </html>

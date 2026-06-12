@@ -36,6 +36,11 @@ namespace Playlist.Repositories
 
         public void Add(Playlist.Models.Playlist playlist)
         {
+            if (playlist.PlaylistId == 0)
+            {
+                playlist.PlaylistId = _context.Playlists.Any() ? _context.Playlists.Max(p => p.PlaylistId) + 1 : 1;
+            }
+
             _context.Playlists.Add(playlist);
             _context.SaveChanges();
         }

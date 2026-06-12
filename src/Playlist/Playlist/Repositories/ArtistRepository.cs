@@ -29,5 +29,41 @@ namespace Playlist.Repositories
                     .ThenInclude(s => s.Genre)
                 .FirstOrDefault(a => a.ArtistId == id);
         }
+
+        public List<Artist> Search(string term)
+        {
+            term = term.ToLower();
+            return _context.Artists
+                .Where(a => a.StageName.ToLower().Contains(term) || a.Country.ToLower().Contains(term))
+                .Take(20)
+                .ToList();
+        }
+
+        public void Add(Artist artist)
+        {
+            artist.ArtistId = _context.Artists.Any() ? _context.Artists.Max(a => a.ArtistId) + 1 : 1;
+            _context.Artists.Add(artist);
+            _context.SaveChanges();
+        }
+
+        public void Update(Artist artist)
+        {
+            var existing = _context.Artists.FirstOrDefault(a => a.ArtistId == artist.ArtistId);
+            if (existing == null) return;
+            existing.StageName = artist.StageName;
+            existing.Country = artist.Country;
+            existing.DebutDate = artist.DebutDate;
+            existing.Biography = artist.Biography;
+            existing.IsActive = artist.IsActive;
+            _context.SaveChanges();
+        }
+
+        public void Delete(int id)
+        {
+            var artist = _context.Artists.FirstOrDefault(a => a.ArtistId == id);
+            if (artist == null) return;
+            _context.Artists.Remove(artist);
+            _context.SaveChanges();
+        }
     }
 }

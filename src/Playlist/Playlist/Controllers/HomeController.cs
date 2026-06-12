@@ -47,7 +47,15 @@ namespace Playlist.Controllers
                 .Take(3)
                 .ToList();
 
-            var heroAlbum = featuredAlbums.FirstOrDefault();
+            var heroAlbum = featuredAlbums.FirstOrDefault(a =>
+                    a.Title.Equals("Illmatic", StringComparison.OrdinalIgnoreCase))
+                ?? featuredAlbums.FirstOrDefault();
+
+            if (heroAlbum != null &&
+                heroAlbum.Title.Equals("Illmatic", StringComparison.OrdinalIgnoreCase))
+            {
+                heroAlbum.CoverUrl = "/images/albums/Illmatic.jpg";
+            }
 
             ViewBag.TopSongs = topSongs;
             ViewBag.FeaturedAlbums = featuredAlbums;

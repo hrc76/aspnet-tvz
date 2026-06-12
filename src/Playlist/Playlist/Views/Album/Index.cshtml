@@ -1,34 +1,109 @@
 @model List<Album>
+@using Playlist.Models
 
-<section class="page-hero compact-hero">
-    <p class="eyebrow">Library shelf</p>
-    <h1>Albums</h1>
-    <p>Browse releases, labels and ratings from the collection.</p>
-</section>
+@{
+    ViewData["Title"] = "Albums";
+}
 
-<section class="entity-grid">
-    @foreach (var album in Model)
-    {
-        <article class="entity-card">
-            <div class="entity-card-top">
-                <span class="entity-type">Album</span>
-                <span class="rating-pill">@album.Rating ★</span>
-            </div>
+<div class="catalog-index-page catalog-accent-albums">
+    <section class="catalog-hero">
+        <div class="catalog-hero-copy">
+            <p class="mb-eyebrow">Library shelf</p>
+            <h1>Albums</h1>
+            <p>Browse releases, artwork and catalogue details from every artist.</p>
+        </div>
+        <div class="catalog-hero-stat">
+            <strong>@Model.Count</strong>
+            <span>albums</span>
+        </div>
+    </section>
 
-            <h2>@album.Title</h2>
+    <div class="index-toolbar">
+        <div class="search-box">
+            <span class="search-box-icon" aria-hidden="true"></span>
+            <input type="text" id="searchInput" placeholder="Search albums, artists or labels..." autocomplete="off" aria-label="Search albums, artists or labels" />
+            <div id="searchResults" class="search-results-list"></div>
+        </div>
+        <div class="index-toolbar-actions">
+            <a asp-action="Create" class="mb-btn mb-btn-primary">+ Add Album</a>
+        </div>
+    </div>
 
-            <div class="entity-meta">
-                <span>@album.Artist.StageName</span>
-                <span>@album.ReleaseDate.ToShortDateString()</span>
-                <span>@album.Label</span>
-            </div>
+    <div id="mainList" class="catalog-card-grid album-card-grid fade-in-list">
+        @foreach (var album in Model)
+        {
+            <article class="catalog-card album-catalog-card" data-id="@album.AlbumId">
+                <div class="album-card-art">
+                    @await Html.PartialAsync("_AlbumCover", album)
+                    <span class="album-rating">@album.Rating.ToString("0.0") &#9733;</span>
+                </div>
+                <div class="catalog-card-body">
+                    <p class="catalog-card-kicker">@album.Artist.StageName</p>
+                    <h3>@album.Title</h3>
+                    <p class="album-card-label">@album.Label</p>
+                    <div class="album-card-meta">
+                        <span>@album.ReleaseDate.Year</span>
+                        <span>@album.TotalTracks tracks</span>
+                        <span>@album.Songs.Count linked</span>
+                    </div>
+                </div>
+                <div class="catalog-card-actions">
+                    <a asp-action="Details" asp-route-id="@album.AlbumId" class="mb-btn mb-btn-ghost btn-sm">Open</a>
+                    <a asp-action="Edit" asp-route-id="@album.AlbumId" class="mb-btn mb-btn-secondary btn-sm">Edit</a>
+                    <form asp-action="Delete" asp-route-id="@album.AlbumId" method="post" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="mb-btn mb-btn-danger btn-sm"
+                                onclick="return confirm('Delete \'@album.Title\'?')">Delete</button>
+                    </form>
+                </div>
+            </article>
+        }
+    </div>
+</div>
 
-            <div class="entity-footer">
-                <span>@album.TotalTracks tracks</span>
-                <a asp-controller="Album" asp-action="Details" asp-route-id="@album.AlbumId" class="btn btn-outline">
-                    Open Album
-                </a>
-            </div>
-        </article>
-    }
-</section>
+@section Scripts {
+    <script>
+        $(function () {
+            var $input = $("#searchInput");
+            var $results = $("#searchResults");
+            var searchTimeout;
+
+            function escapeHtml(value) {
+                return $("<div>").text(value == null ? "" : value).html();
+            }
+
+            $input.on("input", function () {
+                clearTimeout(searchTimeout);
+                var term = $(this).val().trim();
+                if (term.length < 1) {
+                    $results.empty().hide();
+                    return;
+                }
+
+                $results.html('<div class="search-skeleton"><span></span><span></span><span></span></div>').show();
+
+                searchTimeout = setTimeout(function () {
+                    $.get("@Url.Action("Search", "Album")", { term: term }, function (data) {
+                        if (!data.length) {
+                            $results.html('<div class="search-empty">No albums found.</div>');
+                            return;
+                        }
+
+                        var html = data.map(function (album) {
+                            return '<a class="search-result-item" href="/Album/Details/' + album.id + '">' +
+                                '<strong>' + escapeHtml(album.title) + '</strong>' +
+                                '<span>' + escapeHtml(album.artist) + ' \u00b7 ' + escapeHtml(album.year) + ' \u00b7 ' + escapeHtml(album.rating) + ' stars</span></a>';
+                        }).join("");
+                        $results.html(html).show();
+                    });
+                }, 300);
+            });
+
+            $(document).on("click", function (event) {
+                if (!$(event.target).closest(".search-box").length) {
+                    $results.hide();
+                }
+            });
+        });
+    </script>
+}

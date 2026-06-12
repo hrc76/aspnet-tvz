@@ -1,31 +1,120 @@
 @model List<Artist>
+@using Playlist.Models
 
-<h1>Artists</h1>
+@{
+    ViewData["Title"] = "Artists";
+}
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Stage Name</th>
-            <th>Country</th>
-            <th>Debut Date</th>
-            <th>Active</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+<div class="catalog-index-page catalog-accent-artists">
+    <section class="catalog-hero">
+        <div class="catalog-hero-copy">
+            <p class="mb-eyebrow">Catalogue</p>
+            <h1>Artists</h1>
+            <p>Explore the people behind the music and keep their catalogue details current.</p>
+        </div>
+        <div class="catalog-hero-stat">
+            <strong>@Model.Count</strong>
+            <span>artists</span>
+        </div>
+    </section>
+
+    <div class="index-toolbar">
+        <div class="search-box">
+            <span class="search-box-icon" aria-hidden="true"></span>
+            <input type="text" id="searchInput" placeholder="Search artists or country..." autocomplete="off" aria-label="Search artists or country" />
+            <div id="searchResults" class="search-results-list"></div>
+        </div>
+        <div class="index-toolbar-actions">
+            <a asp-action="Create" class="mb-btn mb-btn-primary">+ Add Artist</a>
+        </div>
+    </div>
+
+    <div id="mainList" class="catalog-card-grid artist-card-grid fade-in-list">
         @foreach (var artist in Model)
         {
-            <tr>
-                <td>@artist.StageName</td>
-                <td>@artist.Country</td>
-                <td>@artist.DebutDate.ToShortDateString()</td>
-                <td>@(artist.IsActive ? "Yes" : "No")</td>
-                <td>
-                    <a asp-controller="Artist" asp-action="Details" asp-route-id="@artist.ArtistId">
-                        Details
-                    </a>
-                </td>
-            </tr>
+            <article class="catalog-card artist-catalog-card" data-id="@artist.ArtistId">
+                <div class="artist-card-visual">
+                    <span class="artist-card-orbit" aria-hidden="true"></span>
+                    <div class="artist-card-avatar">@artist.StageName.Substring(0, 1)</div>
+                    <span class="catalog-status @(artist.IsActive ? "is-active" : "is-inactive")">
+                        @(artist.IsActive ? "Active" : "Inactive")
+                    </span>
+                </div>
+                <div class="catalog-card-body">
+                    <p class="catalog-card-kicker">@artist.Country</p>
+                    <h3>@artist.StageName</h3>
+                    <div class="catalog-card-stats">
+                        <div>
+                            <strong>@artist.Albums.Count</strong>
+                            <span>Albums</span>
+                        </div>
+                        <div>
+                            <strong>@artist.Songs.Count</strong>
+                            <span>Songs</span>
+                        </div>
+                        <div>
+                            <strong>@artist.DebutDate.Year</strong>
+                            <span>Debut</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="catalog-card-actions">
+                    <a asp-action="Details" asp-route-id="@artist.ArtistId" class="mb-btn mb-btn-ghost btn-sm">Details</a>
+                    <a asp-action="Edit" asp-route-id="@artist.ArtistId" class="mb-btn mb-btn-secondary btn-sm">Edit</a>
+                    <form asp-action="Delete" asp-route-id="@artist.ArtistId" method="post" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="mb-btn mb-btn-danger btn-sm"
+                                onclick="return confirm('Delete \'@artist.StageName\'?')">Delete</button>
+                    </form>
+                </div>
+            </article>
         }
-    </tbody>
-</table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var $input = $("#searchInput");
+            var $results = $("#searchResults");
+            var searchTimeout;
+
+            function escapeHtml(value) {
+                return $("<div>").text(value == null ? "" : value).html();
+            }
+
+            $input.on("input", function () {
+                clearTimeout(searchTimeout);
+                var term = $(this).val().trim();
+                if (term.length < 1) {
+                    $results.empty().hide();
+                    return;
+                }
+
+                $results.html('<div class="search-skeleton"><span></span><span></span><span></span></div>').show();
+
+                searchTimeout = setTimeout(function () {
+                    $.get("@Url.Action("Search", "Artist")", { term: term }, function (data) {
+                        if (!data.length) {
+                            $results.html('<div class="search-empty">No artists found.</div>');
+                            return;
+                        }
+
+                        var html = data.map(function (artist) {
+                            return '<a class="search-result-item" href="/Artist/Details/' + artist.id + '">' +
+                                '<strong>' + escapeHtml(artist.name) + '</strong>' +
+                                '<span>' + escapeHtml(artist.country) + ' \u00b7 ' + escapeHtml(artist.active) + '</span></a>';
+                        }).join("");
+                        $results.html(html).show();
+                    });
+                }, 300);
+            });
+
+            $(document).on("click", function (event) {
+                if (!$(event.target).closest(".search-box").length) {
+                    $results.hide();
+                }
+            });
+        });
+    </script>
+}

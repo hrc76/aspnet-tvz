@@ -1,0 +1,151 @@
+@model Song
+@using Playlist.Models
+
+@{
+    ViewData["Title"] = "Edit Song";
+    var artists = ViewBag.Artists as List<Artist>;
+    var albums = ViewBag.Albums as List<Album>;
+    var genres = ViewBag.Genres as List<Genre>;
+    var moods = ViewBag.Moods as List<MoodType>;
+}
+
+<div class="admin-page">
+<aside class="admin-aside">
+    <div class="admin-aside-card">
+        <div class="admin-aside-icon">✏️</div>
+        <h3>@Model.Title</h3>
+        <p>Edit track metadata, artist, album and playback stats.</p>
+    </div>
+    <nav class="admin-aside-links">
+        <a asp-action="Details" asp-route-id="@Model.SongId">← Back to song</a>
+        <a asp-action="Index">All Songs</a>
+    </nav>
+</aside>
+
+<form asp-action="Edit" asp-route-id="@Model.SongId" method="post" class="account-form crud-form fade-in-form">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="SongId" />
+
+    <div class="form-group">
+        <label asp-for="Title">Title</label>
+        <input asp-for="Title" class="mb-input" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="form-row-2">
+        <div class="form-group">
+            <label asp-for="ArtistId">Artist</label>
+            <select asp-for="ArtistId" class="mb-input">
+                <option value="">— select artist —</option>
+                @foreach (var a in artists ?? new List<Artist>())
+                {
+                    <option value="@a.ArtistId">@a.StageName</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="AlbumId">Album</label>
+            <select asp-for="AlbumId" class="mb-input">
+                <option value="">— select album —</option>
+                @foreach (var a in albums ?? new List<Album>())
+                {
+                    <option value="@a.AlbumId">@a.Title</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="form-row-2">
+        <div class="form-group">
+            <label asp-for="GenreId">Genre</label>
+            <select asp-for="GenreId" class="mb-input">
+                <option value="">— select genre —</option>
+                @foreach (var g in genres ?? new List<Genre>())
+                {
+                    <option value="@g.GenreId">@g.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Mood">Mood</label>
+            <select asp-for="Mood" class="mb-input">
+                @foreach (var m in moods ?? new List<MoodType>())
+                {
+                    <option value="@m">@m</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="form-row-2">
+        <div class="form-group">
+            <label for="DurationInput">Duration (mm:ss)</label>
+            <input type="text" id="DurationInput" name="DurationInput"
+                   class="mb-input"
+                   value="@Model.Duration.ToString(@"m\:ss")" />
+            <input type="hidden" asp-for="Duration" id="DurationHidden" />
+        </div>
+
+        <div class="form-group">
+            @{
+                var releaseDateStr = Model.ReleaseDate == default ? "" : Model.ReleaseDate.ToString("dd.MM.yyyy");
+            }
+            @await Html.PartialAsync("_DateTimePicker", releaseDateStr,
+                new ViewDataDictionary(ViewData) { { "Label", "Release Date" }, { "Name", "ReleaseDateInput" } })
+            <input type="hidden" asp-for="ReleaseDate" id="ReleaseDateHidden" />
+        </div>
+    </div>
+
+    <div class="form-row-2">
+        <div class="form-group">
+            <label asp-for="PlayCount">Play Count</label>
+            <input asp-for="PlayCount" type="number" min="0" class="mb-input" />
+            <span asp-validation-for="PlayCount" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="PopularityScore">Popularity Score (0–100)</label>
+            <input asp-for="PopularityScore" type="number" min="0" max="100" step="0.1" class="mb-input" />
+            <span asp-validation-for="PopularityScore" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="playlist-visibility-box">
+        <label class="mb-checkbox">
+            <input asp-for="IsExplicit" />
+            <div>
+                <strong>Explicit content</strong>
+                <p>Mark this song as containing explicit lyrics.</p>
+            </div>
+        </label>
+    </div>
+
+    <div class="playlist-create-actions">
+        <button type="submit" class="mb-btn mb-btn-primary">Save Changes</button>
+        <a asp-action="Details" asp-route-id="@Model.SongId" class="mb-btn mb-btn-ghost">Cancel</a>
+    </div>
+</form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(function () {
+            $("form").on("submit", function () {
+                var raw = $("#DurationInput").val().trim();
+                var parts = raw.split(":");
+                var minutes = parseInt(parts[0]) || 0;
+                var seconds = parseInt(parts[1]) || 0;
+                $("#DurationHidden").val("00:" + String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0"));
+            });
+
+            $(".js-datepicker").on("change", function () {
+                if ($(this).attr("name") === "ReleaseDateInput") {
+                    $("#ReleaseDateHidden").val($(this).val());
+                }
+            });
+        });
+    </script>
+}

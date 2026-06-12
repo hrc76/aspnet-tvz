@@ -1,32 +1,46 @@
-﻿@using Playlist.Models
+@using Playlist.Models
+@using System.Text.Json
 
 @{
     ViewData["Title"] = "Home";
 
-    var topSongs = ViewBag.TopSongs as List<Song>;
+    var topSongs       = ViewBag.TopSongs as List<Song>;
     var featuredAlbums = ViewBag.FeaturedAlbums as List<Album>;
     var featuredArtists = ViewBag.FeaturedArtists as List<Artist>;
     var featuredGenres = ViewBag.FeaturedGenres as List<Genre>;
-    var heroAlbum = ViewBag.HeroAlbum as Album;
+    var heroAlbum      = ViewBag.HeroAlbum as Album;
 
-    string CoverName(string title) => title.Replace(" ", "") + ".jpg";
+    string GenreColor(string? g) => g?.ToLower() switch {
+        "sludge metal" => "#8b1a1a",
+        "hip hop"      => "#c8960a",
+        "techno"       => "#1a4a8b",
+        "rock"         => "#1a5c2a",
+        "heavy metal"  => "#4a1a1a",
+        "electronic"   => "#0a2a4a",
+        _              => "#ff8a1f"
+    };
+
+    string SongJson(Song s) => JsonSerializer.Serialize(new {
+        id         = s.SongId,
+        title      = s.Title,
+        artist     = s.Artist?.StageName ?? "",
+        audioUrl   = s.AudioUrl ?? "",
+        coverColor = GenreColor(s.Genre?.Name)
+    });
 }
 
 <section class="mb-home-hero">
     <div class="mb-hero-copy">
         <p class="mb-eyebrow">MusicBar Library</p>
         <h1>Listen. Collect. Discover.</h1>
-        <p>
-            Explore sludge metal, classic hip hop and techno records through one underground music library.
-        </p>
-
+        <p>Explore sludge metal, classic hip hop, heavy metal, rock and electronic records through one underground music library.</p>
     </div>
 
     @if (heroAlbum != null)
     {
         <a asp-controller="Album" asp-action="Details" asp-route-id="@heroAlbum.AlbumId" class="mb-featured-record">
-            <img src="~/images/albums/@CoverName(heroAlbum.Title)" alt="@heroAlbum.Title cover" />
-            <div>
+            @await Html.PartialAsync("_AlbumCover", heroAlbum)
+            <div class="mb-featured-record-info">
                 <span>Featured record</span>
                 <h2>@heroAlbum.Title</h2>
                 <p>@heroAlbum.Artist.StageName · @heroAlbum.ReleaseDate.Year</p>
@@ -41,6 +55,17 @@
             <p class="mb-eyebrow">Now in rotation</p>
             <h2>Top Songs</h2>
         </div>
+        @if (topSongs != null && topSongs.Any())
+        {
+            var topQueue = JsonSerializer.Serialize(topSongs.Select(s => new {
+                id         = s.SongId,
+                title      = s.Title,
+                artist     = s.Artist?.StageName ?? "",
+                audioUrl   = s.AudioUrl ?? "",
+                coverColor = GenreColor(s.Genre?.Name)
+            }));
+            <button class="mb-btn mb-btn-ghost js-play-all-btn" data-queue="@topQueue">▶ Play All</button>
+        }
     </div>
 
     <div class="mb-song-list">
@@ -48,14 +73,20 @@
         {
             foreach (var song in topSongs)
             {
-                <article class="mb-song-row">
-                    <div class="mb-play-dot">▶</div>
-                    <div>
-                        <h3>@song.Title</h3>
-                        <p>@song.Artist.StageName · @song.Genre.Name · @song.Duration</p>
+                var sj = SongJson(song);
+                <article class="mb-song-row track-row" data-song-id="@song.SongId">
+                    <div class="mb-song-row-left">
+                        <div class="eq-bars"><span></span><span></span><span></span><span></span></div>
+                        <button class="play-btn js-play-btn" data-song="@sj" title="Play @song.Title">
+                            <span class="play-icon">▶</span>
+                        </button>
                     </div>
-                    <span>@song.PlayCount plays</span>
-                    <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId">Listen Now</a>
+                    <div class="mb-song-row-info">
+                        <h3>@song.Title @if (song.IsExplicit) { <span class="explicit-badge">E</span> }</h3>
+                        <p>@song.Artist?.StageName · @song.Genre?.Name · @song.Duration</p>
+                    </div>
+                    <span class="mb-song-row-stat">@song.PlayCount plays</span>
+                    <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId" class="mb-btn mb-btn-ghost btn-sm">Details</a>
                 </article>
             }
         }
@@ -68,7 +99,7 @@
             <p class="mb-eyebrow">Record shelf</p>
             <h2>Featured Albums</h2>
         </div>
-        <a asp-controller="Library" asp-action="Index">Open library</a>
+        <a asp-controller="Album" asp-action="Index">View all albums</a>
     </div>
 
     <div class="mb-album-grid">
@@ -77,10 +108,12 @@
             foreach (var album in featuredAlbums)
             {
                 <a asp-controller="Album" asp-action="Details" asp-route-id="@album.AlbumId" class="mb-album-card">
-                    <img src="~/images/albums/@CoverName(album.Title)" alt="@album.Title cover" />
-                    <h3>@album.Title</h3>
-                    <p>@album.Artist.StageName</p>
-                    <span>@album.Rating ★</span>
+                    @await Html.PartialAsync("_AlbumCover", album)
+                    <div class="mb-album-card-info">
+                        <h3>@album.Title</h3>
+                        <p>@album.Artist?.StageName</p>
+                        <span>@album.Rating ★</span>
+                    </div>
                 </a>
             }
         }
@@ -102,6 +135,7 @@
                 foreach (var artist in featuredArtists)
                 {
                     <a asp-controller="Artist" asp-action="Details" asp-route-id="@artist.ArtistId" class="mb-mini-card">
+                        <span class="mini-card-avatar">@artist.StageName.Substring(0, 1).ToUpper()</span>
                         <h3>@artist.StageName</h3>
                         <p>@artist.Country</p>
                     </a>

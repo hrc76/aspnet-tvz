@@ -1,33 +1,87 @@
-@model List<Playlist>
+@using Playlist.Models
+@model List<global::Playlist.Models.Playlist>
 
-<h1>Playlists</h1>
+@{
+    ViewData["Title"] = "Playlists";
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Owner</th>
-            <th>Created At</th>
-            <th>Public</th>
-            <th>Likes</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var playlist in Model)
-        {
-            <tr>
-                <td>@playlist.Name</td>
-                <td>@playlist.Owner.Username</td>
-                <td>@playlist.CreatedAt.ToShortDateString()</td>
-                <td>@(playlist.IsPublic ? "Yes" : "No")</td>
-                <td>@playlist.Likes</td>
-                <td>
-                    <a asp-controller="Playlist" asp-action="Details" asp-route-id="@playlist.PlaylistId">
-                        Details
-                    </a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    string PGrad(string name) {
+        int h = ((name.GetHashCode() % 360) + 360) % 360;
+        return $"linear-gradient(135deg, hsl({h},62%,20%), hsl({(h + 45) % 360},55%,12%))";
+    }
+}
+
+<section class="page-hero">
+    <p class="mb-eyebrow">Browse</p>
+    <h1>Playlists</h1>
+    <p>@Model.Count curated playlists from MusicBar listeners.</p>
+</section>
+
+<div class="index-toolbar">
+    <div class="search-box">
+        <input id="playlistSearchInput" type="text" placeholder="Search playlists..." autocomplete="off" />
+        <div id="playlistSearchResults" class="search-results-list"></div>
+    </div>
+    <a asp-action="Create" class="mb-btn mb-btn-primary">+ New Playlist</a>
+</div>
+
+<div class="entity-grid fade-in-list">
+    @foreach (var p in Model)
+    {
+        <article class="entity-card">
+            <div class="entity-card-cover">
+                <div class="album-cover-wrap" style="background: @PGrad(p.Name)">
+                    <span class="album-cover-letter">@p.Name.Substring(0, 1).ToUpper()</span>
+                </div>
+            </div>
+            <span class="entity-type">Playlist</span>
+            <h2>@p.Name</h2>
+            <p class="entity-meta">by @p.Owner.Username</p>
+            <p class="entity-meta">@p.Songs.Count songs · @(p.IsPublic ? "Public" : "Private")</p>
+            <div class="entity-actions">
+                <a asp-action="Details" asp-route-id="@p.PlaylistId" class="mb-btn mb-btn-ghost btn-sm">Open</a>
+                <a asp-action="Edit" asp-route-id="@p.PlaylistId" class="mb-btn mb-btn-secondary btn-sm">Edit</a>
+            </div>
+        </article>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var searchTimeout;
+            $("#playlistSearchInput").on("input", function () {
+                clearTimeout(searchTimeout);
+                var term = $(this).val().trim();
+                if (term.length < 1) {
+                    $("#playlistSearchResults").empty().hide();
+                    return;
+                }
+                searchTimeout = setTimeout(function () {
+                    $.ajax({
+                        url: "@Url.Action("Search", "Playlist")",
+                        method: "GET",
+                        data: { term: term },
+                        success: function (data) {
+                            if (!data.length) {
+                                $("#playlistSearchResults").html('<div class="search-empty">No playlists found.</div>').show();
+                                return;
+                            }
+                            var html = "";
+                            data.forEach(function (item) {
+                                html += '<a href="/Playlist/Details/' + item.id + '" class="search-result-item">' +
+                                    '<span>' + item.text + '</span>' +
+                                    '<small>' + item.subtitle + '</small>' +
+                                    '</a>';
+                            });
+                            $("#playlistSearchResults").html(html).show();
+                        }
+                    });
+                }, 250);
+            });
+            $(document).on("click", function (e) {
+                if (!$(e.target).closest(".search-box").length)
+                    $("#playlistSearchResults").hide();
+            });
+        });
+    </script>
+}

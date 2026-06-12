@@ -1,31 +1,152 @@
 @model List<Song>
+@using Playlist.Models
+@using System.Text.Json
 
-<h1>Songs</h1>
+@{
+    ViewData["Title"] = "Songs";
 
-<table>
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Artist</th>
-            <th>Genre</th>
-            <th>Duration</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var s in Model)
-        {
-            <tr>
-                <td>@s.Title</td>
-                <td>@s.Artist.StageName</td>
-                <td>@s.Genre.Name</td>
-                <td>@s.Duration</td>
-                <td>
-                    <a asp-controller="Song" asp-action="Details" asp-route-id="@s.SongId">
-                        Details
-                    </a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    string GenreColor(string? genre) => genre?.ToLower() switch {
+        "sludge metal" => "#8b1a1a",
+        "hip hop" => "#c8960a",
+        "techno" => "#1a4a8b",
+        "rock" => "#1a5c2a",
+        "heavy metal" => "#4a1a1a",
+        "electronic" => "#0a2a4a",
+        _ => "#ff8a1f"
+    };
+
+    var allQueue = JsonSerializer.Serialize(Model.Select(song => new {
+        id = song.SongId,
+        title = song.Title,
+        artist = song.Artist.StageName,
+        audioUrl = song.AudioUrl ?? "",
+        coverColor = GenreColor(song.Genre.Name)
+    }));
+}
+
+<div class="catalog-index-page catalog-accent-songs">
+    <section class="catalog-hero">
+        <div class="catalog-hero-copy">
+            <p class="mb-eyebrow">Catalogue</p>
+            <h1>Songs</h1>
+            <p>A focused track view with playback, release context and listening stats.</p>
+        </div>
+        <div class="catalog-hero-stat">
+            <strong>@Model.Count</strong>
+            <span>tracks</span>
+        </div>
+    </section>
+
+    <div class="index-toolbar">
+        <div class="search-box">
+            <span class="search-box-icon" aria-hidden="true"></span>
+            <input type="text" id="searchInput" placeholder="Search songs or artists..." autocomplete="off" aria-label="Search songs or artists" />
+            <div id="searchResults" class="search-results-list"></div>
+        </div>
+        <div class="index-toolbar-actions">
+            <button class="mb-btn mb-btn-ghost js-play-all-btn" data-queue="@allQueue">Play All</button>
+            <a asp-action="Create" class="mb-btn mb-btn-primary">+ Add Song</a>
+        </div>
+    </div>
+
+    <div class="track-catalog">
+        <div class="track-catalog-head" aria-hidden="true">
+            <span>#</span>
+            <span>Track</span>
+            <span>Album</span>
+            <span>Genre</span>
+            <span>Duration</span>
+            <span>Plays</span>
+            <span></span>
+        </div>
+
+        <div id="mainList" class="track-catalog-body fade-in-list">
+            @{ var trackNumber = 0; }
+            @foreach (var song in Model)
+            {
+                trackNumber++;
+                var songJson = JsonSerializer.Serialize(new {
+                    id = song.SongId,
+                    title = song.Title,
+                    artist = song.Artist.StageName,
+                    audioUrl = song.AudioUrl ?? "",
+                    coverColor = GenreColor(song.Genre.Name)
+                });
+
+                <article class="track-catalog-row" data-song-id="@song.SongId">
+                    <div class="track-catalog-play">
+                        <span class="track-catalog-number">@trackNumber.ToString("00")</span>
+                        <button class="play-btn js-play-btn" data-song="@songJson" title="Play @song.Title">
+                            <span class="play-icon">&#9654;</span>
+                        </button>
+                        <div class="eq-bars"><span></span><span></span><span></span><span></span></div>
+                    </div>
+                    <div class="track-catalog-title">
+                        <h3>@song.Title @if (song.IsExplicit) { <span class="explicit-badge">E</span> }</h3>
+                        <p>@song.Artist.StageName <span>&middot;</span> @song.Mood</p>
+                    </div>
+                    <div class="track-catalog-album">@song.Album.Title</div>
+                    <div><span class="track-genre-chip">@song.Genre.Name</span></div>
+                    <div class="track-catalog-stat">@song.Duration.ToString(@"m\:ss")</div>
+                    <div class="track-catalog-stat">@song.PlayCount.ToString("N0")</div>
+                    <div class="track-catalog-actions">
+                        <a asp-action="Details" asp-route-id="@song.SongId" class="track-action-link">Open</a>
+                        <a asp-action="Edit" asp-route-id="@song.SongId" class="track-action-link">Edit</a>
+                        <form asp-action="Delete" asp-route-id="@song.SongId" method="post" class="inline-form">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="track-delete-link"
+                                    onclick="return confirm('Delete \'@song.Title\'?')">Delete</button>
+                        </form>
+                    </div>
+                </article>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var $input = $("#searchInput");
+            var $results = $("#searchResults");
+            var timeout;
+
+            function escapeHtml(value) {
+                return $("<div>").text(value == null ? "" : value).html();
+            }
+
+            $input.on("input", function () {
+                clearTimeout(timeout);
+                var term = $(this).val().trim();
+                if (term.length < 1) {
+                    $results.empty().hide();
+                    return;
+                }
+
+                $results.html('<div class="search-skeleton"><span></span><span></span><span></span></div>').show();
+
+                timeout = setTimeout(function () {
+                    $.get("@Url.Action("Search", "Song")", { term: term }, function (data) {
+                        if (!data.length) {
+                            $results.html('<div class="search-empty">No songs found.</div>');
+                            return;
+                        }
+
+                        var html = data.map(function (song) {
+                            return '<a class="search-result-item" href="/Song/Details/' + song.id + '">' +
+                                '<strong>' + escapeHtml(song.title) + '</strong>' +
+                                '<span>' + escapeHtml(song.artist) + ' \u00b7 ' + escapeHtml(song.genre) + ' \u00b7 ' + escapeHtml(song.duration) + '</span></a>';
+                        }).join("");
+                        $results.html(html).show();
+                    });
+                }, 300);
+            });
+
+            $(document).on("click", function (event) {
+                if (!$(event.target).closest(".search-box").length) {
+                    $results.hide();
+                }
+            });
+        });
+    </script>
+}

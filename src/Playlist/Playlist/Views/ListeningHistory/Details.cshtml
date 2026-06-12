@@ -1,27 +1,43 @@
 @model ListeningHistory
+@using Playlist.Models
 
+@{
+    ViewData["Title"] = "Listening History Details";
+}
 
-<h1>Listening History Details</h1>
+<section class="artist-profile-hero">
+    <div class="entity-row-icon" style="width:3.5rem;height:3.5rem;font-size:1.6rem;border-radius:1rem;">▶</div>
+    <div class="artist-profile-info">
+        <p class="mb-eyebrow">Play event</p>
+        <h1>@Model.Song.Title</h1>
+        <div class="artist-meta-row">
+            <span>by @Model.Song.Artist.StageName</span>
+            <span>Played by @Model.User.Username</span>
+            <span>@Model.ListenedAt.ToString("dd.MM.yyyy HH:mm")</span>
+            <span>@Model.Repeats× repeats</span>
+        </div>
+    </div>
+</section>
 
-<p>
-    <strong>User:</strong>
-    <a asp-controller="User" asp-action="Details" asp-route-id="@Model.User.UserId">
-        @Model.User.Username
-    </a>
-</p>
+<section class="mb-section">
+    <div class="song-context-grid">
+        <article class="song-context-card">
+            <p class="mb-eyebrow">User</p>
+            <h2>@Model.User.Username</h2>
+            <p>@Model.User.Email</p>
+            <a asp-controller="User" asp-action="Details" asp-route-id="@Model.User.UserId">Open user page</a>
+        </article>
 
-<p>
-    <strong>Song:</strong>
-    <a asp-controller="Song" asp-action="Details" asp-route-id="@Model.Song.SongId">
-        @Model.Song.Title
-    </a>
-</p>
+        <article class="song-context-card">
+            <p class="mb-eyebrow">Song</p>
+            <h2>@Model.Song.Title</h2>
+            <p>@Model.Song.Artist.StageName · @Model.Song.Duration</p>
+            <a asp-controller="Song" asp-action="Details" asp-route-id="@Model.Song.SongId">Open song page</a>
+        </article>
+    </div>
+</section>
 
-<p><strong>Listened At:</strong> @Model.ListenedAt</p>
-<p><strong>Repeats:</strong> @Model.Repeats</p>
-
-<p class="mt-4">
+<div class="details-actions mt-4">
+    <a asp-action="Index" class="mb-btn mb-btn-ghost">All History</a>
     <a asp-controller="Home" asp-action="Index" class="mb-btn mb-btn-ghost">Home</a>
-    <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Library</a>
-    <a asp-controller="Discover" asp-action="Index" class="mb-btn mb-btn-ghost">Discover</a>
-</p>
+</div>

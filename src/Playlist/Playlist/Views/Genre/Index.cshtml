@@ -1,29 +1,109 @@
 @model List<Genre>
+@using Playlist.Models
 
-<h1>Genres</h1>
+@{
+    ViewData["Title"] = "Genres";
+}
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Song Count</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+<div class="catalog-index-page catalog-accent-genres">
+    <section class="catalog-hero">
+        <div class="catalog-hero-copy">
+            <p class="mb-eyebrow">Catalogue</p>
+            <h1>Genres</h1>
+            <p>Shape the collection by sound, style and the scenes that connect each track.</p>
+        </div>
+        <div class="catalog-hero-stat">
+            <strong>@Model.Count</strong>
+            <span>genres</span>
+        </div>
+    </section>
+
+    <div class="index-toolbar">
+        <div class="search-box">
+            <span class="search-box-icon" aria-hidden="true"></span>
+            <input type="text" id="searchInput" placeholder="Search genres..." autocomplete="off" aria-label="Search genres" />
+            <div id="searchResults" class="search-results-list"></div>
+        </div>
+        <div class="index-toolbar-actions">
+            <a asp-action="Create" class="mb-btn mb-btn-primary">+ Add Genre</a>
+        </div>
+    </div>
+
+    <div id="mainList" class="catalog-card-grid genre-card-grid fade-in-list">
         @foreach (var genre in Model)
         {
-            <tr>
-                <td>@genre.Name</td>
-                <td>@genre.Description</td>
-                <td>@genre.Songs.Count</td>
-                <td>
-                    <a asp-controller="Genre" asp-action="Details" asp-route-id="@genre.GenreId">
-                        Details
-                    </a>
-                </td>
-            </tr>
+            <article class="catalog-card genre-catalog-card" data-id="@genre.GenreId">
+                <div class="genre-card-top">
+                    <span class="genre-card-mark" aria-hidden="true"></span>
+                    <span class="genre-song-count">@genre.Songs.Count songs</span>
+                </div>
+                <div class="catalog-card-body">
+                    <p class="catalog-card-kicker">Sound category</p>
+                    <h3>@genre.Name</h3>
+                    <p class="genre-card-description">
+                        @(string.IsNullOrWhiteSpace(genre.Description) ? "No description has been added for this genre yet." : genre.Description)
+                    </p>
+                </div>
+                <div class="genre-card-wave" aria-hidden="true">
+                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <div class="catalog-card-actions">
+                    <a asp-action="Details" asp-route-id="@genre.GenreId" class="mb-btn mb-btn-ghost btn-sm">Details</a>
+                    <a asp-action="Edit" asp-route-id="@genre.GenreId" class="mb-btn mb-btn-secondary btn-sm">Edit</a>
+                    <form asp-action="Delete" asp-route-id="@genre.GenreId" method="post" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="mb-btn mb-btn-danger btn-sm"
+                                onclick="return confirm('Delete \'@genre.Name\'?')">Delete</button>
+                    </form>
+                </div>
+            </article>
         }
-    </tbody>
-</table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var $input = $("#searchInput");
+            var $results = $("#searchResults");
+            var searchTimeout;
+
+            function escapeHtml(value) {
+                return $("<div>").text(value == null ? "" : value).html();
+            }
+
+            $input.on("input", function () {
+                clearTimeout(searchTimeout);
+                var term = $(this).val().trim();
+                if (term.length < 1) {
+                    $results.empty().hide();
+                    return;
+                }
+
+                $results.html('<div class="search-skeleton"><span></span><span></span><span></span></div>').show();
+
+                searchTimeout = setTimeout(function () {
+                    $.get("@Url.Action("Search", "Genre")", { term: term }, function (data) {
+                        if (!data.length) {
+                            $results.html('<div class="search-empty">No genres found.</div>');
+                            return;
+                        }
+
+                        var html = data.map(function (genre) {
+                            return '<a class="search-result-item" href="/Genre/Details/' + genre.id + '">' +
+                                '<strong>' + escapeHtml(genre.name) + '</strong>' +
+                                '<span>' + escapeHtml(genre.description) + '</span></a>';
+                        }).join("");
+                        $results.html(html).show();
+                    });
+                }, 300);
+            });
+
+            $(document).on("click", function (event) {
+                if (!$(event.target).closest(".search-box").length) {
+                    $results.hide();
+                }
+            });
+        });
+    </script>
+}

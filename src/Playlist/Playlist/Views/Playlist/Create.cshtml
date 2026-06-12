@@ -4,15 +4,18 @@
     ViewData["Title"] = "Create Playlist";
 }
 
-<section class="library-hero">
-    <p class="mb-eyebrow">New playlist</p>
-
-    <h1>Create Playlist</h1>
-
-    <p>
-        Create a public or private playlist for your library.
-    </p>
-</section>
+<div class="admin-page">
+<aside class="admin-aside">
+    <div class="admin-aside-card">
+        <div class="admin-aside-icon">🎧</div>
+        <h3>New Playlist</h3>
+        <p>Create a public or private playlist. After saving, open it from Library to add songs.</p>
+    </div>
+    <nav class="admin-aside-links">
+        <a asp-controller="Library" asp-action="Index">← Back to Library</a>
+        <a asp-controller="Playlist" asp-action="Index">All Playlists</a>
+    </nav>
+</aside>
 
 <form asp-controller="Playlist"
       asp-action="Create"
@@ -56,17 +59,11 @@
     </div>
 
     <div class="playlist-create-actions">
-        <button type="submit" class="mb-btn mb-btn-primary">
-            Create Playlist
-        </button>
-
-        <a asp-controller="Library"
-           asp-action="Index"
-           class="mb-btn mb-btn-ghost">
-            Cancel
-        </a>
+        <button type="submit" class="mb-btn mb-btn-primary">Create Playlist</button>
+        <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Cancel</a>
     </div>
 </form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

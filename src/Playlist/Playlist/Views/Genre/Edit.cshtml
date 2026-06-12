@@ -1,0 +1,46 @@
+@model Genre
+@using Playlist.Models
+
+@{
+    ViewData["Title"] = "Edit Genre";
+}
+
+<div class="admin-page">
+<aside class="admin-aside">
+    <div class="admin-aside-card">
+        <div class="admin-aside-icon">✏️</div>
+        <h3>@Model.Name</h3>
+        <p>@Model.Songs?.Count songs in this genre.</p>
+    </div>
+    <nav class="admin-aside-links">
+        <a asp-action="Details" asp-route-id="@Model.GenreId">← Back to genre</a>
+        <a asp-action="Index">All Genres</a>
+    </nav>
+</aside>
+
+<form asp-action="Edit" asp-route-id="@Model.GenreId" method="post" class="account-form crud-form fade-in-form">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="GenreId" />
+
+    <div class="form-group">
+        <label asp-for="Name">Genre Name</label>
+        <input asp-for="Name" class="mb-input" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Description">Description</label>
+        <textarea asp-for="Description" class="mb-input" rows="5"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="playlist-create-actions">
+        <button type="submit" class="mb-btn mb-btn-primary">Save Changes</button>
+        <a asp-action="Details" asp-route-id="@Model.GenreId" class="mb-btn mb-btn-ghost">Cancel</a>
+    </div>
+</form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

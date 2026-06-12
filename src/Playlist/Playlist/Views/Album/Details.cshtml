@@ -1,16 +1,31 @@
 @model Album
+@using System.Text.Json
 
 @{
     ViewData["Title"] = Model.Title;
-    string coverName = Model.Title.Replace(" ", "") + ".jpg";
-}
 
+    string GenreColor(string? g) => g?.ToLower() switch {
+        "sludge metal" => "#8b1a1a",
+        "hip hop"      => "#c8960a",
+        "techno"       => "#1a4a8b",
+        "rock"         => "#1a5c2a",
+        "heavy metal"  => "#4a1a1a",
+        "electronic"   => "#0a2a4a",
+        _              => "#ff8a1f"
+    };
+
+    var albumQueue = JsonSerializer.Serialize(Model.Songs?.Select(s => new {
+        id         = s.SongId,
+        title      = s.Title,
+        artist     = s.Artist?.StageName ?? Model.Artist?.StageName ?? "",
+        audioUrl   = s.AudioUrl ?? "",
+        coverColor = GenreColor(s.Genre?.Name)
+    }) ?? Enumerable.Empty<object>());
+}
 
 <section class="record-detail-hero">
     <div class="record-cover-wrap">
-        <img src="~/images/albums/@coverName"
-             alt="@Model.Title cover"
-             onerror="this.src='/images/albums/placeholder.jpg'" />
+        @await Html.PartialAsync("_AlbumCover", Model)
     </div>
 
     <div class="record-info">
@@ -32,31 +47,26 @@
         </div>
 
         <div class="record-actions">
-            <button type="button" class="mb-btn mb-btn-primary">
-                    Play Album
+            <button type="button" class="mb-btn mb-btn-primary js-play-all-btn" data-queue="@albumQueue">
+                ▶ Play Album
             </button>
+
             @if (ViewBag.IsSaved == true)
-{
-    <form asp-controller="SavedAlbum" asp-action="Remove" method="post">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="albumId" value="@Model.AlbumId" />
-
-        <button type="submit" class="mb-btn mb-btn-danger">
-            Remove from Library
-        </button>
-    </form>
-}
-else
-{
-    <form asp-controller="SavedAlbum" asp-action="Add" method="post">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="albumId" value="@Model.AlbumId" />
-
-        <button type="submit" class="mb-btn mb-btn-ghost">
-            Save to Library
-        </button>
-    </form>
-}
+            {
+                <form asp-controller="SavedAlbum" asp-action="Remove" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="albumId" value="@Model.AlbumId" />
+                    <button type="submit" class="mb-btn mb-btn-danger">Remove from Library</button>
+                </form>
+            }
+            else
+            {
+                <form asp-controller="SavedAlbum" asp-action="Add" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="albumId" value="@Model.AlbumId" />
+                    <button type="submit" class="mb-btn mb-btn-ghost">Save to Library</button>
+                </form>
+            }
         </div>
     </div>
 </section>
@@ -73,26 +83,39 @@ else
     {
         <div class="tracklist">
             @{
-                var index = 1;
+                int trackNum = 1;
             }
-
             @foreach (var song in Model.Songs)
             {
-                <a asp-controller="Song"
-                   asp-action="Details"
-                   asp-route-id="@song.SongId"
-                   class="track-row">
-                    <span class="track-number">@index</span>
+                var sj = JsonSerializer.Serialize(new {
+                    id         = song.SongId,
+                    title      = song.Title,
+                    artist     = song.Artist?.StageName ?? Model.Artist?.StageName ?? "",
+                    audioUrl   = song.AudioUrl ?? "",
+                    coverColor = GenreColor(song.Genre?.Name)
+                });
+
+                <article class="track-row" data-song-id="@song.SongId">
+                    <div class="track-num-play">
+                        <span class="track-number">@trackNum</span>
+                        <div class="eq-bars"><span></span><span></span><span></span><span></span></div>
+                        <button class="play-btn js-play-btn" data-song="@sj" title="Play @song.Title">
+                            <span class="play-icon">▶</span>
+                        </button>
+                    </div>
 
                     <div class="track-main">
-                        <h3>@song.Title</h3>
-                        <p>@song.Artist.StageName · @song.Genre.Name</p>
+                        <h3>@song.Title @if (song.IsExplicit) { <span class="explicit-badge">E</span> }</h3>
+                        <p>@song.Artist?.StageName · @song.Genre?.Name</p>
                     </div>
 
                     <span class="track-duration">@song.Duration</span>
-                </a>
 
-                index++;
+                    <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId"
+                       class="mb-btn mb-btn-ghost btn-sm track-details-link">Details</a>
+                </article>
+
+                trackNum++;
             }
         </div>
     }
@@ -102,8 +125,13 @@ else
     }
 </section>
 
-<p class="mt-4">
+<div class="details-actions mt-4">
+    <a asp-action="Edit" asp-route-id="@Model.AlbumId" class="mb-btn mb-btn-secondary">Edit Album</a>
+    <form asp-action="Delete" asp-route-id="@Model.AlbumId" method="post" class="inline-form">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="mb-btn mb-btn-danger"
+                onclick="return confirm('Delete album \'@Model.Title\'?')">Delete Album</button>
+    </form>
+    <a asp-action="Index" class="mb-btn mb-btn-ghost">All Albums</a>
     <a asp-controller="Home" asp-action="Index" class="mb-btn mb-btn-ghost">Home</a>
-    <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Library</a>
-    <a asp-controller="Discover" asp-action="Index" class="mb-btn mb-btn-ghost">Discover</a>
-</p>
+</div>

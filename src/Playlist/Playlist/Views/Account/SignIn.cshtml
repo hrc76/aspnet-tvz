@@ -11,14 +11,15 @@
 </section>
 
 <form asp-controller="Account" asp-action="SignIn" method="post" class="account-form">
-    <label for="userId">User</label>
-
-    <select name="userId" id="userId">
-        @foreach (var user in Model)
-        {
-            <option value="@user.UserId">@user.Username</option>
-        }
-    </select>
+    <div class="form-group">
+        <label for="userId">Choose user</label>
+        <select name="userId" id="userId" class="mb-input">
+            @foreach (var user in Model)
+            {
+                <option value="@user.UserId">@user.Username — @user.Email</option>
+            }
+        </select>
+    </div>
 
     <button type="submit" class="mb-btn mb-btn-primary">Sign In</button>
 </form>

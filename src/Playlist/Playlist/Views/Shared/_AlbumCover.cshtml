@@ -1,0 +1,19 @@
+@using Playlist.Models
+@model Album
+@{
+    int h = ((Model.Title.GetHashCode() % 360) + 360) % 360;
+    string grad = $"linear-gradient(135deg, hsl({h},62%,20%), hsl({(h + 45) % 360},55%,12%))";
+    string artistName = Model.Artist?.StageName ?? "";
+    string searchTerm = Uri.EscapeDataString((Model.Title + " " + artistName).Trim());
+    string? coverUrl = Model.Title.Equals("Illmatic", StringComparison.OrdinalIgnoreCase)
+        ? Url.Content("~/images/albums/Illmatic.jpg")
+        : Model.CoverUrl;
+}
+<div class="album-cover-wrap" style="background:@grad" data-album-search="@searchTerm">
+    @if (!string.IsNullOrEmpty(coverUrl))
+    {
+        <img src="@coverUrl" class="album-cover-real" alt="@Model.Title" loading="lazy"
+             referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.remove()" />
+    }
+    <span class="album-cover-letter">@Model.Title.Substring(0, 1).ToUpper()</span>
+</div>

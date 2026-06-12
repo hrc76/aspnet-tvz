@@ -1,0 +1,82 @@
+@model User
+@using Playlist.Models
+
+@{
+    ViewData["Title"] = "Add User";
+}
+
+<div class="admin-page">
+<aside class="admin-aside">
+    <div class="admin-aside-card">
+        <div class="admin-aside-icon">👤</div>
+        <h3>New User</h3>
+        <p>Create a new MusicBar account. The user can sign in and create playlists, save albums and favorite songs.</p>
+    </div>
+    <nav class="admin-aside-links">
+        <a asp-action="Index">← All Users</a>
+    </nav>
+</aside>
+
+<form asp-action="Create" method="post" class="account-form crud-form fade-in-form">
+    @Html.AntiForgeryToken()
+
+    <div class="form-row-2">
+        <div class="form-group">
+            <label asp-for="Username">Username</label>
+            <input asp-for="Username" class="mb-input" placeholder="username" />
+            <span asp-validation-for="Username" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Email">Email</label>
+            <input asp-for="Email" type="email" class="mb-input" placeholder="user@example.com" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-row-2">
+        <div class="form-group">
+            @{
+                var regDateStr = Model.RegistrationDate == default ? "" : Model.RegistrationDate.ToString("dd.MM.yyyy");
+            }
+            @await Html.PartialAsync("_DateTimePicker", regDateStr,
+                new ViewDataDictionary(ViewData) { { "Label", "Registration Date" }, { "Name", "RegistrationDateInput" } })
+            <input type="hidden" asp-for="RegistrationDate" id="RegistrationDateHidden" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="FavoriteGenreName">Favorite Genre</label>
+            <input asp-for="FavoriteGenreName" class="mb-input" placeholder="e.g. Sludge Metal" />
+            <span asp-validation-for="FavoriteGenreName" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="playlist-visibility-box">
+        <label class="mb-checkbox">
+            <input asp-for="IsPremium" />
+            <div>
+                <strong>Premium user</strong>
+                <p>This user has a premium subscription.</p>
+            </div>
+        </label>
+    </div>
+
+    <div class="playlist-create-actions">
+        <button type="submit" class="mb-btn mb-btn-primary">Add User</button>
+        <a asp-action="Index" class="mb-btn mb-btn-ghost">Cancel</a>
+    </div>
+</form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(function () {
+            $(".js-datepicker").on("change", function () {
+                if ($(this).attr("name") === "RegistrationDateInput") {
+                    $("#RegistrationDateHidden").val($(this).val());
+                }
+            });
+        });
+    </script>
+}

@@ -1,31 +1,99 @@
 @model List<ListeningHistory>
+@using Playlist.Models
 
-<h1>Listening History</h1>
+@{
+    ViewData["Title"] = "Listening History";
+    var uniqueListeners = Model.Select(item => item.UserId).Distinct().Count();
+}
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>User</th>
-            <th>Song</th>
-            <th>Listened At</th>
-            <th>Repeats</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var history in Model)
+<div class="catalog-index-page catalog-accent-history">
+    <section class="catalog-hero history-hero">
+        <div class="catalog-hero-copy">
+            <p class="mb-eyebrow">Activity log</p>
+            <h1>Listening History</h1>
+            <p>Review what was played, who listened and when every session happened.</p>
+        </div>
+        <div class="history-hero-stats">
+            <div><strong>@Model.Count</strong><span>events</span></div>
+            <div><strong>@uniqueListeners</strong><span>listeners</span></div>
+        </div>
+    </section>
+
+    <div class="index-toolbar">
+        <div class="search-box">
+            <span class="search-box-icon" aria-hidden="true"></span>
+            <input id="historySearchInput" type="text" placeholder="Search by song, user or artist..." autocomplete="off" aria-label="Search listening history" />
+            <div id="historySearchResults" class="search-results-list"></div>
+        </div>
+    </div>
+
+    <div class="history-timeline fade-in-list">
+        @foreach (var item in Model)
         {
-            <tr>
-                <td>@history.User.Username</td>
-                <td>@history.Song.Title</td>
-                <td>@history.ListenedAt</td>
-                <td>@history.Repeats</td>
-                <td>
-                    <a asp-controller="ListeningHistory" asp-action="Details" asp-route-id="@history.ListeningHistoryId">
-                        Details
-                    </a>
-                </td>
-            </tr>
+            <article class="history-event">
+                <div class="history-event-marker" aria-hidden="true"><span>&#9654;</span></div>
+                <div class="history-event-main">
+                    <div class="history-event-heading">
+                        <div>
+                            <p class="catalog-card-kicker">@item.User.Username listened</p>
+                            <h3>@item.Song.Title</h3>
+                        </div>
+                        <time datetime="@item.ListenedAt.ToString("O")">@item.ListenedAt.ToString("dd.MM.yyyy HH:mm")</time>
+                    </div>
+                    <div class="history-event-meta">
+                        <span>@item.Song.Artist.StageName</span>
+                        <span>@item.Repeats plays</span>
+                    </div>
+                </div>
+                <a asp-action="Details" asp-route-id="@item.ListeningHistoryId" class="history-event-link" aria-label="Open listening history details">&#8594;</a>
+            </article>
         }
-    </tbody>
-</table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var $input = $("#historySearchInput");
+            var $results = $("#historySearchResults");
+            var searchTimeout;
+
+            function escapeHtml(value) {
+                return $("<div>").text(value == null ? "" : value).html();
+            }
+
+            $input.on("input", function () {
+                clearTimeout(searchTimeout);
+                var term = $(this).val().trim();
+                if (term.length < 1) {
+                    $results.empty().hide();
+                    return;
+                }
+
+                $results.html('<div class="search-skeleton"><span></span><span></span><span></span></div>').show();
+
+                searchTimeout = setTimeout(function () {
+                    $.get("@Url.Action("Search", "ListeningHistory")", { term: term }, function (data) {
+                        if (!data.length) {
+                            $results.html('<div class="search-empty">No history events found.</div>');
+                            return;
+                        }
+
+                        var html = data.map(function (item) {
+                            return '<a href="/ListeningHistory/Details/' + item.id + '" class="search-result-item">' +
+                                '<strong>' + escapeHtml(item.text) + '</strong>' +
+                                '<span>' + escapeHtml(item.subtitle) + '</span></a>';
+                        }).join("");
+                        $results.html(html).show();
+                    });
+                }, 300);
+            });
+
+            $(document).on("click", function (event) {
+                if (!$(event.target).closest(".search-box").length) {
+                    $results.hide();
+                }
+            });
+        });
+    </script>
+}

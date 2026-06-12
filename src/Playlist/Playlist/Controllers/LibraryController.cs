@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Playlist.Models;
 using Playlist.Repositories;
@@ -5,6 +7,7 @@ using Playlist.ViewModels;
 
 namespace Playlist.Controllers
 {
+    [Authorize]
     public class LibraryController : Controller
     {
         private readonly SongRepository _songRepository;
@@ -12,24 +15,30 @@ namespace Playlist.Controllers
         private readonly PlaylistRepository _playlistRepository;
         private readonly FavoriteSongRepository _favoriteSongRepository;
         private readonly SavedAlbumRepository _savedAlbumRepository;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly UserRepository _userRepository;
 
         public LibraryController(
             SongRepository songRepository,
             AlbumRepository albumRepository,
             PlaylistRepository playlistRepository,
             FavoriteSongRepository favoriteSongRepository,
-            SavedAlbumRepository savedAlbumRepository)
+            SavedAlbumRepository savedAlbumRepository,
+            UserManager<AppUser> userManager,
+            UserRepository userRepository)
         {
             _songRepository = songRepository;
             _albumRepository = albumRepository;
             _playlistRepository = playlistRepository;
             _favoriteSongRepository = favoriteSongRepository;
             _savedAlbumRepository = savedAlbumRepository;
+            _userManager = userManager;
+            _userRepository = userRepository;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
+            var userId = await GetCurrentDomainUserIdAsync();
 
             var favoriteSongs = userId == null
                 ? new List<Song>()
@@ -80,12 +89,12 @@ namespace Playlist.Controllers
         }
 
         [HttpGet]
-        public IActionResult Search(string term, string type = "all")
+        public async Task<IActionResult> Search(string term, string type = "all")
         {
             term = term?.ToLower() ?? "";
             type = type?.ToLower() ?? "all";
 
-            var userId = HttpContext.Session.GetInt32("UserId");
+            var userId = await GetCurrentDomainUserIdAsync();
 
             var savedAlbums = userId == null
                 ? _albumRepository.GetAll()
@@ -153,6 +162,31 @@ namespace Playlist.Controllers
                 .ToList();
 
             return Json(result);
+        }
+
+        private async Task<int?> GetCurrentDomainUserIdAsync()
+        {
+            var appUser = await _userManager.GetUserAsync(User);
+            if (appUser == null)
+            {
+                return null;
+            }
+
+            var domainUser = _userRepository.GetByEmail(appUser.Email ?? string.Empty);
+            if (domainUser != null)
+            {
+                return domainUser.UserId;
+            }
+
+            domainUser = new User
+            {
+                Username = appUser.UserName ?? appUser.Email ?? "User",
+                Email = appUser.Email ?? string.Empty,
+                RegistrationDate = DateTime.UtcNow,
+                IsPremium = false
+            };
+            _userRepository.Add(domainUser);
+            return domainUser.UserId;
         }
     }
 }

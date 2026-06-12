@@ -15,24 +15,48 @@ build_property.GenerateRazorMetadataSourceChecksumAttributes =
 build_property.MSBuildProjectDirectory = C:\Users\drvoj\Documents\GitHub\aspnet-tvz\src\Playlist\Playlist
 build_property._RazorSourceGeneratorDebug = 
 
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Account/Profile.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxQcm9maWxlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Account/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxSZWdpc3Rlci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Account/SignIn.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxTaWduSW4uY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Album/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWxidW1cQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Album/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWxidW1cRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Album/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWxidW1cRWRpdC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Album/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWxidW1cSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Artist/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXJ0aXN0XENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Artist/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXJ0aXN0XERldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Artist/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXJ0aXN0XEVkaXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Artist/Index.cshtml]
@@ -43,8 +67,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGlzY292ZXJcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Genre/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcR2VucmVcQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Genre/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcR2VucmVcRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Genre/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcR2VucmVcRWRpdC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Genre/Index.cshtml]
@@ -87,8 +119,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGxheWxpc3RcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Playlist/_PlaylistAttachmentList.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGxheWxpc3RcX1BsYXlsaXN0QXR0YWNobWVudExpc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Shared/_AlbumCover.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9BbGJ1bUNvdmVyLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Shared/_DateTimePicker.cshtml]
@@ -99,16 +139,32 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Song/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU29uZ1xDcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Song/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU29uZ1xEZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Song/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU29uZ1xFZGl0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Song/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU29uZ1xJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/User/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXNlclxDcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/User/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXNlclxEZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/User/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXNlclxFZGl0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/User/Index.cshtml]

@@ -30,9 +30,13 @@ namespace Playlist.Migrations
                     b.Property<int>("ArtistId")
                         .HasColumnType("int");
 
+                    b.Property<string>("CoverUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Label")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<double>("Rating")
                         .HasColumnType("float");
@@ -42,7 +46,8 @@ namespace Playlist.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("TotalTracks")
                         .HasColumnType("int");
@@ -61,11 +66,13 @@ namespace Playlist.Migrations
 
                     b.Property<string>("Biography")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("Country")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("DebutDate")
                         .HasColumnType("datetime2");
@@ -75,7 +82,8 @@ namespace Playlist.Migrations
 
                     b.Property<string>("StageName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("ArtistId");
 
@@ -115,11 +123,13 @@ namespace Playlist.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("GenreId");
 
@@ -223,6 +233,9 @@ namespace Playlist.Migrations
                     b.Property<int>("ArtistId")
                         .HasColumnType("int");
 
+                    b.Property<string>("AudioUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<TimeSpan>("Duration")
                         .HasColumnType("time");
 
@@ -246,7 +259,8 @@ namespace Playlist.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("SongId");
 
@@ -266,11 +280,13 @@ namespace Playlist.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("FavoriteGenreName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("IsPremium")
                         .HasColumnType("bit");
@@ -280,7 +296,8 @@ namespace Playlist.Migrations
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("UserId");
 
