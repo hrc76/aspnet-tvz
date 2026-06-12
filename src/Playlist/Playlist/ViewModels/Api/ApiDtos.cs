@@ -1,6 +1,7 @@
 using Playlist.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
 namespace Playlist.ViewModels.Api
@@ -58,10 +59,19 @@ namespace Playlist.ViewModels.Api
 
     public class ArtistCreateUpdateDto
     {
+        [Required]
+        [StringLength(200, MinimumLength = 1)]
         public string StageName { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100)]
         public string Country { get; set; } = string.Empty;
+
         public DateTime DebutDate { get; set; }
+
+        [StringLength(2000)]
         public string Biography { get; set; } = string.Empty;
+
         public bool IsActive { get; set; }
     }
 
@@ -72,7 +82,11 @@ namespace Playlist.ViewModels.Api
 
     public class GenreCreateUpdateDto
     {
+        [Required]
+        [StringLength(100, MinimumLength = 1)]
         public string Name { get; set; } = string.Empty;
+
+        [StringLength(1000)]
         public string Description { get; set; } = string.Empty;
     }
 
@@ -88,12 +102,25 @@ namespace Playlist.ViewModels.Api
 
     public class AlbumCreateUpdateDto
     {
+        [Required]
+        [StringLength(200, MinimumLength = 1)]
         public string Title { get; set; } = string.Empty;
+
         public DateTime ReleaseDate { get; set; }
+
+        [Required]
+        [StringLength(200)]
         public string Label { get; set; } = string.Empty;
+
+        [Range(0, 500)]
         public int TotalTracks { get; set; }
+
+        [Range(0.0, 5.0)]
         public double Rating { get; set; }
+
         public string? CoverUrl { get; set; }
+
+        [Range(1, int.MaxValue)]
         public int ArtistId { get; set; }
     }
 
@@ -117,16 +144,30 @@ namespace Playlist.ViewModels.Api
 
     public class SongCreateUpdateDto
     {
+        [Required]
+        [StringLength(200, MinimumLength = 1)]
         public string Title { get; set; } = string.Empty;
+
         public TimeSpan Duration { get; set; }
         public DateTime ReleaseDate { get; set; }
+
+        [Range(0, int.MaxValue)]
         public int PlayCount { get; set; }
+
+        [Range(0.0, 100.0)]
         public double PopularityScore { get; set; }
+
         public MoodType Mood { get; set; }
         public bool IsExplicit { get; set; }
         public string? AudioUrl { get; set; }
+
+        [Range(1, int.MaxValue)]
         public int ArtistId { get; set; }
+
+        [Range(1, int.MaxValue)]
         public int AlbumId { get; set; }
+
+        [Range(1, int.MaxValue)]
         public int GenreId { get; set; }
     }
 
@@ -145,10 +186,19 @@ namespace Playlist.ViewModels.Api
 
     public class PlaylistCreateUpdateDto
     {
+        [Required]
+        [StringLength(80, MinimumLength = 2)]
         public string Name { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(250, MinimumLength = 5)]
         public string Description { get; set; } = string.Empty;
+
         public bool IsPublic { get; set; }
+
+        [Range(1, int.MaxValue)]
         public int? OwnerId { get; set; }
+
         public List<int> SongIds { get; set; } = new List<int>();
     }
 
@@ -165,10 +215,20 @@ namespace Playlist.ViewModels.Api
 
     public class UserCreateUpdateDto
     {
+        [Required]
+        [StringLength(100, MinimumLength = 2)]
         public string Username { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        [StringLength(200)]
         public string Email { get; set; } = string.Empty;
+
         public DateTime RegistrationDate { get; set; }
+
+        [StringLength(100)]
         public string FavoriteGenreName { get; set; } = string.Empty;
+
         public bool IsPremium { get; set; }
     }
 

@@ -67,6 +67,11 @@ namespace Playlist.Tests
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
+            if (Request.Headers.TryGetValue("X-Test-Auth", out var value) && value == "none")
+            {
+                return Task.FromResult(AuthenticateResult.NoResult());
+            }
+
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, "test-user"),
