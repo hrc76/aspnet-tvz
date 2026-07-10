@@ -126,12 +126,18 @@
 </section>
 
 <div class="details-actions mt-4">
-    <a asp-action="Edit" asp-route-id="@Model.AlbumId" class="mb-btn mb-btn-secondary">Edit Album</a>
-    <form asp-action="Delete" asp-route-id="@Model.AlbumId" method="post" class="inline-form">
-        @Html.AntiForgeryToken()
-        <button type="submit" class="mb-btn mb-btn-danger"
-                onclick="return confirm('Delete album \'@Model.Title\'?')">Delete Album</button>
-    </form>
+    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+    {
+        <a asp-action="Edit" asp-route-id="@Model.AlbumId" class="mb-btn mb-btn-secondary">Edit Album</a>
+    }
+    @if (User.IsInRole("Admin"))
+    {
+        <form asp-action="Delete" asp-route-id="@Model.AlbumId" method="post" class="inline-form">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="mb-btn mb-btn-danger"
+                    onclick="return confirm('Delete album \'@Model.Title\' and all of its songs?')">Delete Album</button>
+        </form>
+    }
     <a asp-action="Index" class="mb-btn mb-btn-ghost">All Albums</a>
     <a asp-controller="Home" asp-action="Index" class="mb-btn mb-btn-ghost">Home</a>
 </div>

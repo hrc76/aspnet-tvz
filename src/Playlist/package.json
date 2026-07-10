@@ -1,0 +1,17 @@
+{
+  "name": "musicbar-e2e-tests",
+  "private": true,
+  "scripts": {
+    "mcp": "node MusicBar.Mcp/server.mjs",
+    "mcp:test": "node MusicBar.Mcp/smoke-test.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
+  }
+}

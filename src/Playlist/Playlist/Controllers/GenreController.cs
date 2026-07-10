@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Playlist.Models;
 using Playlist.Repositories;
@@ -42,12 +43,14 @@ namespace Playlist.Controllers
             return Json(result);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         public IActionResult Create()
         {
             return View(new Genre());
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Manager")]
         [ValidateAntiForgeryToken]
         public IActionResult Create(Genre genre)
         {
@@ -60,6 +63,7 @@ namespace Playlist.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         public IActionResult Edit(int id)
         {
             var genre = _genreRepository.GetById(id);
@@ -68,6 +72,7 @@ namespace Playlist.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Manager")]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, Genre genre)
         {
@@ -83,6 +88,7 @@ namespace Playlist.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Playlist.Models;
 using Playlist.Repositories;
@@ -43,12 +44,14 @@ namespace Playlist.Controllers
             return Json(result);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         public IActionResult Create()
         {
             return View(new Artist { DebutDate = DateTime.Today, IsActive = true });
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Manager")]
         [ValidateAntiForgeryToken]
         public IActionResult Create(Artist artist)
         {
@@ -62,6 +65,7 @@ namespace Playlist.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         public IActionResult Edit(int id)
         {
             var artist = _artistRepository.GetById(id);
@@ -70,6 +74,7 @@ namespace Playlist.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Manager")]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, Artist artist)
         {
@@ -86,6 +91,7 @@ namespace Playlist.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {

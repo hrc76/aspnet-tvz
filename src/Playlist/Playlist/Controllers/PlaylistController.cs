@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Playlist.Data;
 using Playlist.Models;
 using Playlist.Repositories;
+using Playlist.Services;
 using System.IO;
 
 namespace Playlist.Controllers
@@ -13,30 +13,33 @@ namespace Playlist.Controllers
     public class PlaylistController : Controller
     {
         private readonly PlaylistRepository _playlistRepository;
-        private readonly MusicBarDbContext _dbContext;
         private readonly UserManager<AppUser> _userManager;
         private readonly UserRepository _userRepository;
+        private readonly IImageStorageService _imageStorage;
 
         public PlaylistController(
             PlaylistRepository playlistRepository,
-            MusicBarDbContext dbContext,
             UserManager<AppUser> userManager,
-            UserRepository userRepository)
+            UserRepository userRepository,
+            IImageStorageService imageStorage)
         {
             _playlistRepository = playlistRepository;
-            _dbContext = dbContext;
             _userManager = userManager;
             _userRepository = userRepository;
+            _imageStorage = imageStorage;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var playlists = _playlistRepository.GetAll();
+            var userId = await GetCurrentDomainUserIdAsync();
+            var playlists = _playlistRepository.GetAll()
+                .Where(p => p.IsPublic || IsCatalogAdmin() || (userId != null && p.OwnerId == userId.Value))
+                .ToList();
             return View(playlists);
         }
 
         [AllowAnonymous]
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
             var playlist = _playlistRepository.GetById(id);
 
@@ -45,93 +48,15 @@ namespace Playlist.Controllers
                 return NotFound();
             }
 
+            var currentUserId = await GetCurrentDomainUserIdAsync();
+            ViewBag.CanManage = IsCatalogAdmin() || (currentUserId != null && playlist.OwnerId == currentUserId.Value);
+
+            if (!playlist.IsPublic && !IsCatalogAdmin())
+            {
+                if (currentUserId == null || playlist.OwnerId != currentUserId.Value) return Forbid();
+            }
+
             return View(playlist);
-        }
-
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult GetAttachments(int playlistId)
-        {
-            var attachments = _dbContext.PlaylistAttachments
-                .Where(a => a.PlaylistId == playlistId)
-                .OrderByDescending(a => a.CreatedAt)
-                .ToList();
-
-            return PartialView("_PlaylistAttachmentList", attachments);
-        }
-
-        [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]
-        public async Task<IActionResult> UploadAttachment(int playlistId, IFormFile file)
-        {
-            var playlist = _dbContext.Playlists.Find(playlistId);
-            if (playlist == null)
-            {
-                return NotFound();
-            }
-
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest();
-            }
-
-            var uploadsPath = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "wwwroot",
-                "uploads",
-                "playlists",
-                playlistId.ToString());
-
-            Directory.CreateDirectory(uploadsPath);
-
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsPath, fileName);
-
-            await using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var attachment = new PlaylistAttachment
-            {
-                PlaylistId = playlistId,
-                FileName = file.FileName,
-                FilePath = "/uploads/playlists/" + playlistId + "/" + fileName,
-                ContentType = file.ContentType ?? "application/octet-stream",
-                FileSize = file.Length,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _dbContext.PlaylistAttachments.Add(attachment);
-            await _dbContext.SaveChangesAsync();
-
-            return Json(new { success = true });
-        }
-
-        [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]
-        public IActionResult DeleteAttachment(int id)
-        {
-            var attachment = _dbContext.PlaylistAttachments.Find(id);
-            if (attachment == null)
-            {
-                return NotFound();
-            }
-
-            var physicalPath = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "wwwroot",
-                attachment.FilePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-
-            if (System.IO.File.Exists(physicalPath))
-            {
-                System.IO.File.Delete(physicalPath);
-            }
-
-            _dbContext.PlaylistAttachments.Remove(attachment);
-            _dbContext.SaveChanges();
-
-            return Json(new { success = true });
         }
 
         public IActionResult Create()
@@ -141,7 +66,7 @@ namespace Playlist.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Playlist.Models.Playlist playlist)
+        public async Task<IActionResult> Create(Playlist.Models.Playlist playlist, IFormFile? coverImage)
         {
             var userId = await GetCurrentDomainUserIdAsync();
             if (userId == null)
@@ -161,6 +86,20 @@ namespace Playlist.Controllers
             playlist.CreatedAt = DateTime.Now;
             playlist.Likes = 0;
             playlist.Songs = new List<Song>();
+            playlist.CoverImageUrl = null;
+
+            if (coverImage is { Length: > 0 })
+            {
+                try
+                {
+                    playlist.CoverImageUrl = await _imageStorage.SaveAsync(coverImage, "playlist-covers");
+                }
+                catch (InvalidOperationException exception)
+                {
+                    ModelState.AddModelError("coverImage", exception.Message);
+                    return View(playlist);
+                }
+            }
 
             _playlistRepository.Add(playlist);
 
@@ -173,7 +112,7 @@ namespace Playlist.Controllers
         {
             var userId = await GetCurrentDomainUserIdAsync();
             var playlist = _playlistRepository.GetById(playlistId);
-            if (userId == null || playlist == null || playlist.OwnerId != userId.Value)
+            if (playlist == null || (!IsCatalogAdmin() && (userId == null || playlist.OwnerId != userId.Value)))
             {
                 return Forbid();
             }
@@ -184,26 +123,36 @@ namespace Playlist.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult RemoveSong(int playlistId, int songId)
+        public async Task<IActionResult> RemoveSong(int playlistId, int songId)
         {
+            var playlist = _playlistRepository.GetById(playlistId);
+            var userId = await GetCurrentDomainUserIdAsync();
+            if (playlist == null) return NotFound();
+            if (!IsCatalogAdmin() && (userId == null || playlist.OwnerId != userId.Value)) return Forbid();
             _playlistRepository.RemoveSongFromPlaylist(playlistId, songId);
             return RedirectToAction(nameof(Details), new { id = playlistId });
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            var playlist = _playlistRepository.GetById(id);
+            var userId = await GetCurrentDomainUserIdAsync();
+            if (playlist == null) return NotFound();
+            if (!IsCatalogAdmin() && (userId == null || playlist.OwnerId != userId.Value)) return Forbid();
             _playlistRepository.Delete(id);
+            _imageStorage.Delete(playlist.CoverImageUrl, "playlist-covers");
             return RedirectToAction("Index", "Library");
         }
 
         [HttpGet]
-        public IActionResult Search(string term)
+        public async Task<IActionResult> Search(string term)
         {
             term = term?.ToLower() ?? "";
+            var userId = await GetCurrentDomainUserIdAsync();
             var result = _playlistRepository.GetAll()
+                .Where(p => p.IsPublic || IsCatalogAdmin() || (userId != null && p.OwnerId == userId.Value))
                 .Where(p => p.Name.ToLower().Contains(term) || (p.Owner != null && p.Owner.Username.ToLower().Contains(term)))
                 .Take(12)
                 .Select(p => new {
@@ -222,7 +171,7 @@ namespace Playlist.Controllers
             var userId = await GetCurrentDomainUserIdAsync();
 
             var playlists = userId == null
-                ? _playlistRepository.GetAll()
+                ? new List<Playlist.Models.Playlist>()
                 : _playlistRepository.GetByOwnerId(userId.Value);
 
             var result = playlists
@@ -239,7 +188,7 @@ namespace Playlist.Controllers
             return Json(result);
         }
 
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
             var playlist = _playlistRepository.GetById(id);
 
@@ -248,31 +197,59 @@ namespace Playlist.Controllers
                 return NotFound();
             }
 
+            var userId = await GetCurrentDomainUserIdAsync();
+            if (!IsCatalogAdmin() && (userId == null || playlist.OwnerId != userId.Value)) return Forbid();
+
             return View(playlist);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Playlist.Models.Playlist playlist)
+        public async Task<IActionResult> Edit(int id, Playlist.Models.Playlist playlist, IFormFile? coverImage)
         {
             if (id != playlist.PlaylistId)
             {
                 return NotFound();
             }
 
+            var existing = _playlistRepository.GetById(id);
+            var userId = await GetCurrentDomainUserIdAsync();
+            if (existing == null) return NotFound();
+            if (!IsCatalogAdmin() && (userId == null || existing.OwnerId != userId.Value)) return Forbid();
+
             ModelState.Remove("Owner");
             ModelState.Remove("Songs");
 
             if (!ModelState.IsValid)
             {
+                playlist.CoverImageUrl = existing.CoverImageUrl;
                 return View(playlist);
+            }
+
+            var coverImageUrl = existing.CoverImageUrl;
+            if (coverImage is { Length: > 0 })
+            {
+                try
+                {
+                    coverImageUrl = await _imageStorage.SaveAsync(
+                        coverImage,
+                        "playlist-covers",
+                        existing.CoverImageUrl);
+                }
+                catch (InvalidOperationException exception)
+                {
+                    playlist.CoverImageUrl = existing.CoverImageUrl;
+                    ModelState.AddModelError("coverImage", exception.Message);
+                    return View(playlist);
+                }
             }
 
             _playlistRepository.UpdateBasicInfo(
                 playlist.PlaylistId,
                 playlist.Name,
                 playlist.Description,
-                playlist.IsPublic
+                playlist.IsPublic,
+                coverImageUrl
             );
 
             return RedirectToAction(nameof(Details), new { id = playlist.PlaylistId });
@@ -305,5 +282,7 @@ namespace Playlist.Controllers
 
             return HttpContext.Session.GetInt32("UserId");
         }
+
+        private bool IsCatalogAdmin() => User.IsInRole("Admin") || User.IsInRole("Manager");
     }
 }

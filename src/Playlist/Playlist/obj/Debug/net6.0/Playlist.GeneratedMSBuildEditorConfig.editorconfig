@@ -31,6 +31,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxTaWduSW4uY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/AiImport/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWlJbXBvcnRcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/drvoj/Documents/GitHub/aspnet-tvz/src/Playlist/Playlist/Views/Album/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWxidW1cQ3JlYXRlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 

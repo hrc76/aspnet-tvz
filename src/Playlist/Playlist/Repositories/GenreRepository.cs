@@ -55,10 +55,21 @@ namespace Playlist.Repositories
 
         public void Delete(int id)
         {
-            var genre = _context.Genres.FirstOrDefault(g => g.GenreId == id);
+            var genre = _context.Genres
+                .Include(g => g.Songs)
+                    .ThenInclude(song => song.Playlists)
+                .FirstOrDefault(g => g.GenreId == id);
             if (genre == null) return;
+            var songIds = genre.Songs.Select(song => song.SongId).ToList();
+            var favorites = _context.FavoriteSongs.Where(x => songIds.Contains(x.SongId)).ToList();
+            var history = _context.ListeningHistories.Where(x => songIds.Contains(x.SongId)).ToList();
+            using var transaction = _context.Database.IsRelational() ? _context.Database.BeginTransaction() : null;
+            _context.FavoriteSongs.RemoveRange(favorites);
+            _context.ListeningHistories.RemoveRange(history);
+            _context.Songs.RemoveRange(genre.Songs);
             _context.Genres.Remove(genre);
             _context.SaveChanges();
+            transaction?.Commit();
         }
     }
 }

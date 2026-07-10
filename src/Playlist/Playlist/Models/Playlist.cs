@@ -26,12 +26,14 @@ namespace Playlist.Models
 
         public int Likes { get; set; }
 
+        [StringLength(500)]
+        public string? CoverImageUrl { get; set; }
+
         [ForeignKey(nameof(Owner))]
         public int OwnerId { get; set; }
 
         public virtual User Owner { get; set; } = null!;
 
         public virtual ICollection<Song> Songs { get; set; } = new List<Song>();
-        public virtual ICollection<PlaylistAttachment> Attachments { get; set; } = new List<PlaylistAttachment>();
     }
 }

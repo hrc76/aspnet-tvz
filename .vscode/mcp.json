@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "musicbar": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/src/Playlist/MusicBar.Mcp/server.mjs"
+      ],
+      "env": {
+        "MUSICBAR_BASE_URL": "https://musicbar-ht2026.azurewebsites.net"
+      }
+    }
+  }
+}

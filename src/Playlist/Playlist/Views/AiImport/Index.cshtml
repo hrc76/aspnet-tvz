@@ -1,0 +1,145 @@
+@model global::Playlist.ViewModels.AiMusicImportViewModel
+@{ ViewData["Title"] = "AI Music Import"; }
+
+<div class="admin-page ai-import-page">
+    <aside class="admin-aside">
+        <div class="admin-aside-card">
+            <div class="admin-aside-icon">AI</div>
+            <h3>AI Music Import</h3>
+            <p>Ask for a song, artist or album. AI detects the context, prepares the correct draft, and nothing is saved until you confirm it.</p>
+        </div>
+        <nav class="admin-aside-links">
+            <a asp-controller="Song" asp-action="Index">All songs</a>
+            <a asp-controller="Artist" asp-action="Create">Create missing artist</a>
+            <a asp-controller="Album" asp-action="Create">Create missing album</a>
+            <a asp-controller="Genre" asp-action="Create">Create missing genre</a>
+        </nav>
+    </aside>
+
+    <div class="ai-import-workspace">
+        <form asp-action="Preview" method="post" class="account-form crud-form fade-in-form">
+            @Html.AntiForgeryToken()
+            <p class="form-section-label">Natural-language input</p>
+            @if (!Model.ApiConfigured)
+            { <div class="alert alert-warning">Set the <code>OPENAI_API_KEY</code> environment variable before generating a draft.</div> }
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            { <div class="alert alert-danger">@Model.ErrorMessage</div> }
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Prompt">What do you want to add?</label>
+                <textarea asp-for="Prompt" class="mb-input ai-prompt" rows="6" placeholder="Dodaj pjesmu Smells Like Teen Spirit, artista Nirvana ili album Nevermind"></textarea>
+                <span asp-validation-for="Prompt" class="text-danger"></span>
+            </div>
+            <button type="submit" class="mb-btn mb-btn-primary" disabled="@(!Model.ApiConfigured)">Detect context and generate draft</button>
+        </form>
+
+        @if (Model.MetadataCandidates.Count > 0)
+        {
+            <section class="account-form crud-form ai-draft-card fade-in-form">
+                <p class="form-section-label">Verified MusicBrainz matches</p>
+                <p class="mb-muted">Choose the correct studio, live, remix or cover version. Missing values can be edited in the next step.</p>
+                @foreach (var candidate in Model.MetadataCandidates)
+                {
+                    <form asp-action="SelectMetadata" method="post" class="ai-metadata-result">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="MusicBrainzId" value="@candidate.MusicBrainzId" />
+                        <input type="hidden" name="Title" value="@candidate.Title" />
+                        <input type="hidden" name="ArtistName" value="@candidate.ArtistName" />
+                        <input type="hidden" name="AlbumTitle" value="@candidate.AlbumTitle" />
+                        <input type="hidden" name="GenreName" value="@candidate.GenreName" />
+                        <input type="hidden" name="DurationSeconds" value="@candidate.DurationSeconds" />
+                        <input type="hidden" name="ReleaseDate" value="@candidate.ReleaseDate?.ToString("yyyy-MM-dd")" />
+                        <div>
+                            <strong>@candidate.Title</strong>
+                            <p class="mb-muted">@candidate.ArtistName · @(string.IsNullOrWhiteSpace(candidate.AlbumTitle) ? "Unknown album" : candidate.AlbumTitle) · @(candidate.DurationSeconds > 0 ? TimeSpan.FromSeconds(candidate.DurationSeconds).ToString(@"m\:ss") : "unknown duration")</p>
+                        </div>
+                        <button type="submit" class="mb-btn mb-btn-secondary btn-sm">Use this recording</button>
+                    </form>
+                }
+            </section>
+        }
+
+        @{ var draft = Model.Draft; }
+        @if (draft != null)
+        {
+            <form asp-action="Confirm" method="post" class="account-form crud-form ai-draft-card fade-in-form">
+                @Html.AntiForgeryToken()
+                <p class="form-section-label">Review before saving</p>
+                <p class="mb-muted">Unknown artist or album data is allowed and will be created automatically. Every value can be corrected.</p>
+                <div class="form-row-2">
+                    <div class="form-group"><label>Title</label><input name="Title" value="@draft.Title" class="mb-input" /></div>
+                    <div class="form-group"><label>Artist</label><input name="ArtistName" value="@draft.ArtistName" class="mb-input" /></div>
+                </div>
+                <div class="form-row-2">
+                    <div class="form-group"><label>Album</label><input name="AlbumTitle" value="@draft.AlbumTitle" class="mb-input" /></div>
+                    <div class="form-group">
+                        <label>Genre</label>
+                        <select name="GenreName" class="mb-input">
+                            @foreach (var genreName in Model.GenreNames)
+                            {
+                                <option value="@genreName" selected="@(genreName == draft.GenreName)">@genreName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row-2">
+                    <div class="form-group"><label>Duration in seconds</label><input name="DurationSeconds" value="@draft.DurationSeconds" type="number" class="mb-input" /></div>
+                    <div class="form-group"><label>Release date</label><input name="ReleaseDate" value="@draft.ReleaseDate.ToString("yyyy-MM-dd")" type="date" class="mb-input" /></div>
+                </div>
+                <div class="form-group"><label>Mood</label><input name="Mood" value="@draft.Mood" class="mb-input" /></div>
+                <label class="mb-checkbox"><input type="checkbox" name="IsExplicit" value="true" checked="@draft.IsExplicit" /><span>Explicit content</span></label>
+                <div class="playlist-create-actions">
+                    <button type="submit" class="mb-btn mb-btn-primary">Confirm and save song</button>
+                    <a asp-action="Index" class="mb-btn mb-btn-ghost">Discard draft</a>
+                </div>
+            </form>
+        }
+
+
+        @if (Model.ArtistDraft != null)
+        {
+            var artistDraft = Model.ArtistDraft;
+            <form asp-action="ConfirmArtist" method="post" class="account-form crud-form ai-draft-card fade-in-form">
+                @Html.AntiForgeryToken()
+                <p class="form-section-label">Artist draft — review before saving</p>
+                <p class="mb-muted">Unknown information is allowed. No image is required.</p>
+                <div class="form-row-2">
+                    <div class="form-group"><label>Stage name</label><input name="StageName" value="@artistDraft.StageName" class="mb-input" /></div>
+                    <div class="form-group"><label>Country</label><input name="Country" value="@artistDraft.Country" class="mb-input" /></div>
+                </div>
+                <div class="form-group"><label>Debut date</label><input name="DebutDate" value="@artistDraft.DebutDate.ToString("yyyy-MM-dd")" type="date" class="mb-input" /></div>
+                <div class="form-group"><label>Biography</label><textarea name="Biography" class="mb-input">@artistDraft.Biography</textarea></div>
+                <label class="mb-checkbox"><input type="checkbox" name="IsActive" value="true" checked="@artistDraft.IsActive" /><span>Active artist</span></label>
+                <div class="playlist-create-actions">
+                    <button type="submit" class="mb-btn mb-btn-primary">Confirm and save artist</button>
+                    <a asp-action="Index" class="mb-btn mb-btn-ghost">Discard draft</a>
+                </div>
+            </form>
+        }
+
+        @if (Model.AlbumDraft != null)
+        {
+            var albumDraft = Model.AlbumDraft;
+            <form asp-action="ConfirmAlbum" method="post" class="account-form crud-form ai-draft-card fade-in-form">
+                @Html.AntiForgeryToken()
+                <p class="form-section-label">Album draft — review before saving</p>
+                <p class="mb-muted">Unknown information is allowed. The album cover is optional and can be added later from Edit Album.</p>
+                <div class="form-row-2">
+                    <div class="form-group"><label>Album title</label><input name="Title" value="@albumDraft.Title" class="mb-input" /></div>
+                    <div class="form-group"><label>Artist</label><input name="ArtistName" value="@albumDraft.ArtistName" class="mb-input" /></div>
+                </div>
+                <div class="form-row-2">
+                    <div class="form-group"><label>Release date</label><input name="ReleaseDate" value="@albumDraft.ReleaseDate.ToString("yyyy-MM-dd")" type="date" class="mb-input" /></div>
+                    <div class="form-group"><label>Label</label><input name="Label" value="@albumDraft.Label" class="mb-input" /></div>
+                </div>
+                <div class="form-group"><label>Total tracks</label><input name="TotalTracks" value="@albumDraft.TotalTracks" type="number" min="0" max="500" class="mb-input" /></div>
+                <div class="playlist-create-actions">
+                    <button type="submit" class="mb-btn mb-btn-primary">Confirm and save album</button>
+                    <a asp-action="Index" class="mb-btn mb-btn-ghost">Discard draft</a>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

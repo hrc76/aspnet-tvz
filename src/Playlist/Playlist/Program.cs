@@ -5,8 +5,36 @@ using Playlist.Data;
 using Playlist.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Playlist.Models;
+using Playlist.Logging;
+using Playlist.Services;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var azureHome = Environment.GetEnvironmentVariable("HOME");
+var isAzure = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID"));
+var dataRoot = builder.Configuration["Storage:RootPath"];
+if (string.IsNullOrWhiteSpace(dataRoot))
+{
+    dataRoot = isAzure && !string.IsNullOrWhiteSpace(azureHome)
+        ? Path.Combine(azureHome, "data", "MusicBar")
+        : Path.Combine(builder.Environment.ContentRootPath, "App_Data");
+}
+
+var uploadsRoot = isAzure || !string.IsNullOrWhiteSpace(builder.Configuration["Storage:RootPath"])
+    ? Path.Combine(dataRoot, "uploads")
+    : Path.Combine(
+        builder.Environment.WebRootPath ?? Path.Combine(builder.Environment.ContentRootPath, "wwwroot"),
+        "uploads");
+var logsRoot = isAzure ? Path.Combine(dataRoot, "logs") : Path.Combine(builder.Environment.ContentRootPath, "Logs");
+
+builder.Logging.AddProvider(new FileLoggerProvider(logsRoot));
+builder.Services.AddSingleton(new FileStorageOptions(uploadsRoot));
+builder.Services.AddSingleton<IImageStorageService, ImageStorageService>();
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(dataRoot, "keys")))
+    .SetApplicationName("MusicBar");
 
 // Add services to the container.
 builder.Services.AddDbContext<MusicBarDbContext>(options =>
@@ -21,6 +49,12 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+});
 
 var authBuilder = builder.Services.AddAuthentication();
 var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
@@ -54,6 +88,17 @@ builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<FavoriteSongRepository>();
 builder.Services.AddScoped<SavedAlbumRepository>();
+builder.Services.AddHttpClient<IAiMusicImportService, OpenAiMusicImportService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.openai.com/v1/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+builder.Services.AddHttpClient<IMusicMetadataService, MusicBrainzMetadataService>(client =>
+{
+    client.BaseAddress = new Uri("https://musicbrainz.org/ws/2/");
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("MusicBar/1.0 (student-project; contact: admin@musicbar.local)");
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
 
 var app = builder.Build();
 
@@ -63,12 +108,13 @@ using (var scope = app.Services.CreateScope())
     var identityContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
     DbInitializer.Initialize(musicContext);
+    EnsureGenreCatalog(musicContext);
     if (identityContext.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
     {
         identityContext.Database.Migrate();
     }
 
-    await EnsureIdentityDataAsync(scope.ServiceProvider, app.Environment.IsDevelopment());
+    await EnsureIdentityDataAsync(scope.ServiceProvider);
 }
 
 // Configure the HTTP request pipeline.
@@ -80,6 +126,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+Directory.CreateDirectory(uploadsRoot);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsRoot),
+    RequestPath = "/uploads"
+});
 
 app.UseRouting();
 
@@ -103,6 +155,10 @@ app.MapControllerRoute(
 
 app.MapControllers();
 app.MapRazorPages();
+app.MapGet("/health", async (MusicBarDbContext dbContext) =>
+    await dbContext.Database.CanConnectAsync()
+        ? Results.Ok(new { status = "healthy" })
+        : Results.Problem(statusCode: 503, title: "Database unavailable"));
 
 var data = DataSeeder.Seed();
 
@@ -217,7 +273,7 @@ static async Task EnsureRoleAsync(IServiceProvider services, string roleName)
     }
 }
 
-static async Task EnsureIdentityDataAsync(IServiceProvider serviceProvider, bool seedDemoUsers)
+static async Task EnsureIdentityDataAsync(IServiceProvider serviceProvider)
 {
     var userManager = serviceProvider.GetRequiredService<UserManager<AppUser>>();
     await EnsureRoleAsync(serviceProvider, "Admin");
@@ -255,20 +311,96 @@ static async Task EnsureIdentityDataAsync(IServiceProvider serviceProvider, bool
         }
     }
 
-    if (seedDemoUsers)
+    const string managerEmail = "manager@musicbar.local";
+    var managerUser = await userManager.FindByEmailAsync(managerEmail);
+    if (managerUser == null)
     {
-        await EnsureDemoIdentityUserAsync(
-            userManager,
-            "hrc@gmail.com",
-            "22222222222",
-            "2222222222222");
+        managerUser = new AppUser
+        {
+            UserName = managerEmail,
+            Email = managerEmail,
+            EmailConfirmed = true,
+            OIB = "44444444444",
+            JMBG = "4444444444444"
+        };
 
-        await EnsureDemoIdentityUserAsync(
-            userManager,
-            "jurs@gmail.com",
-            "33333333333",
-            "3333333333333");
+        var createManagerResult = await userManager.CreateAsync(managerUser, "Manager!12345");
+        if (createManagerResult.Succeeded)
+        {
+            await userManager.AddToRoleAsync(managerUser, "Manager");
+        }
     }
+    else if (!await userManager.IsInRoleAsync(managerUser, "Manager"))
+    {
+        await userManager.AddToRoleAsync(managerUser, "Manager");
+    }
+
+    await EnsureDomainUserAsync(
+        serviceProvider,
+        managerEmail,
+        "MusicBar Manager");
+
+    await EnsureDemoIdentityUserAsync(
+        userManager,
+        "hrc@gmail.com",
+        "22222222222",
+        "2222222222222");
+
+    await EnsureDemoIdentityUserAsync(
+        userManager,
+        "jurs@gmail.com",
+        "33333333333",
+        "3333333333333");
+}
+
+static void EnsureGenreCatalog(MusicBarDbContext context)
+{
+    var standardGenres = new[]
+    {
+        "Unknown", "Pop", "Rock", "Alternative Rock", "Indie", "Grunge", "Punk",
+        "Hip Hop", "R&B", "Soul", "Funk", "Jazz", "Blues", "Country", "Folk",
+        "Classical", "Electronic", "House", "Techno", "Trance", "Drum and Bass",
+        "Reggae", "Latin", "Metal", "Heavy Metal", "Sludge Metal"
+    };
+    var existing = context.Genres.Select(x => x.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+    var nextId = context.Genres.Any() ? context.Genres.Max(x => x.GenreId) + 1 : 1;
+
+    foreach (var name in standardGenres.Where(name => !existing.Contains(name)))
+    {
+        context.Genres.Add(new Genre
+        {
+            GenreId = nextId++,
+            Name = name,
+            Description = name == "Unknown"
+                ? "Use when a reliable genre is not available."
+                : $"Music categorized as {name}."
+        });
+    }
+
+    context.SaveChanges();
+}
+
+static async Task EnsureDomainUserAsync(
+    IServiceProvider serviceProvider,
+    string email,
+    string username)
+{
+    var musicContext = serviceProvider.GetRequiredService<MusicBarDbContext>();
+    var domainUser = await musicContext.Users.FirstOrDefaultAsync(user => user.Email == email);
+    if (domainUser != null)
+    {
+        return;
+    }
+
+    musicContext.Users.Add(new User
+    {
+        Username = username,
+        Email = email,
+        RegistrationDate = DateTime.UtcNow,
+        FavoriteGenreName = "Not selected",
+        IsPremium = false
+    });
+    await musicContext.SaveChangesAsync();
 }
 
 static async Task EnsureDemoIdentityUserAsync(

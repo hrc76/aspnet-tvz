@@ -56,7 +56,7 @@ namespace Playlist.Controllers
                     Title = a.Title,
                     Subtitle = a.Artist.StageName,
                     Meta = $"{a.ReleaseDate.Year} · {a.Rating} ★",
-                    ImagePath = $"/images/albums/{a.Title.Replace(" ", "")}.jpg",
+                    ImagePath = a.CoverUrl ?? string.Empty,
                     ControllerName = "Album"
                 });
 
@@ -72,7 +72,7 @@ namespace Playlist.Controllers
                     Title = p.Name,
                     Subtitle = p.Owner.Username,
                     Meta = $"{p.Songs.Count} songs · {(p.IsPublic ? "Public" : "Private")}",
-                    ImagePath = $"/images/playlists/{p.Name.Replace(" ", "")}.jpg",
+                    ImagePath = p.CoverImageUrl ?? string.Empty,
                     ControllerName = "Playlist"
                 });
 
@@ -108,7 +108,7 @@ namespace Playlist.Controllers
                     Title = a.Title,
                     Subtitle = a.Artist.StageName,
                     Meta = $"{a.ReleaseDate.Year} · {a.Rating} ★",
-                    ImagePath = $"/images/albums/{a.Title.Replace(" ", "")}.jpg",
+                    ImagePath = a.CoverUrl ?? string.Empty,
                     ControllerName = "Album"
                 });
 
@@ -124,7 +124,7 @@ namespace Playlist.Controllers
                     Title = p.Name,
                     Subtitle = p.Owner.Username,
                     Meta = $"{p.Songs.Count} songs · {(p.IsPublic ? "Public" : "Private")}",
-                    ImagePath = $"/images/playlists/{p.Name.Replace(" ", "")}.jpg",
+                    ImagePath = p.CoverImageUrl ?? string.Empty,
                     ControllerName = "Playlist"
                 });
 

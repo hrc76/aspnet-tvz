@@ -25,7 +25,10 @@
             <div id="searchResults" class="search-results-list"></div>
         </div>
         <div class="index-toolbar-actions">
-            <a asp-action="Create" class="mb-btn mb-btn-primary">+ Add User</a>
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-action="Create" class="mb-btn mb-btn-primary">+ Add User</a>
+            }
         </div>
     </div>
 
@@ -55,12 +58,15 @@
                 </div>
                 <div class="catalog-card-actions">
                     <a asp-action="Details" asp-route-id="@user.UserId" class="mb-btn mb-btn-ghost btn-sm">Details</a>
-                    <a asp-action="Edit" asp-route-id="@user.UserId" class="mb-btn mb-btn-secondary btn-sm">Edit</a>
-                    <form asp-action="Delete" asp-route-id="@user.UserId" method="post" class="inline-form">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="mb-btn mb-btn-danger btn-sm"
-                                onclick="return confirm('Delete user \'@user.Username\'?')">Delete</button>
-                    </form>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@user.UserId" class="mb-btn mb-btn-secondary btn-sm">Edit</a>
+                        <form asp-action="Delete" asp-route-id="@user.UserId" method="post" class="inline-form">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="mb-btn mb-btn-danger btn-sm"
+                                    onclick="return confirm('Delete user \'@user.Username\'?')">Delete</button>
+                        </form>
+                    }
                 </div>
             </article>
         }

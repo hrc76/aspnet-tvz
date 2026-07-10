@@ -45,7 +45,7 @@
         </p>
 
         <div class="song-meta-row">
-            <span>@Model.Genre.Name</span>
+            <span>@(Model.Genre?.Name ?? "Unknown genre")</span>
             <span>@Model.Mood</span>
             <span>@Model.Duration</span>
             <span>@Model.PlayCount plays</span>
@@ -149,11 +149,14 @@
 
     <article class="song-context-card">
         <p class="mb-eyebrow">Genre</p>
-        <h2>@Model.Genre.Name</h2>
-        <p>@Model.Genre.Description</p>
-        <a asp-controller="Genre" asp-action="Details" asp-route-id="@Model.Genre.GenreId">
-            Explore genre
-        </a>
+        <h2>@(Model.Genre?.Name ?? "Unknown genre")</h2>
+        <p>@Model.Genre?.Description</p>
+        @if (Model.Genre != null)
+        {
+            <a asp-controller="Genre" asp-action="Details" asp-route-id="@Model.Genre.GenreId">
+                Explore genre
+            </a>
+        }
     </article>
 </section>
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Playlist.Data;
 using Playlist.Models;
+using Playlist.Repositories;
 using Playlist.ViewModels.Api;
 
 namespace Playlist.Controllers.Api
@@ -13,10 +14,12 @@ namespace Playlist.Controllers.Api
     public class SongApiController : ControllerBase
     {
         private readonly MusicBarDbContext _context;
+        private readonly SongRepository _repository;
 
-        public SongApiController(MusicBarDbContext context)
+        public SongApiController(MusicBarDbContext context, SongRepository repository)
         {
             _context = context;
+            _repository = repository;
         }
 
         [AllowAnonymous]
@@ -138,8 +141,7 @@ namespace Playlist.Controllers.Api
                 return NotFound();
             }
 
-            _context.Songs.Remove(song);
-            _context.SaveChanges();
+            _repository.Delete(id);
             return NoContent();
         }
     }

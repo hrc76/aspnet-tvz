@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Playlist.Models;
 using Playlist.Repositories;
+using Playlist.Services;
 
 namespace Playlist.Controllers
 {
@@ -15,31 +16,42 @@ namespace Playlist.Controllers
         private readonly SignInManager<AppUser> _signInManager;
         private readonly UserRepository _userRepository;
         private readonly IConfiguration _configuration;
-        private readonly IWebHostEnvironment _environment;
+        private readonly FileStorageOptions _storage;
 
         public AccountController(
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
             UserRepository userRepository,
             IConfiguration configuration,
-            IWebHostEnvironment environment)
+            FileStorageOptions storage)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _userRepository = userRepository;
             _configuration = configuration;
-            _environment = environment;
+            _storage = storage;
         }
 
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
             var model = new LoginViewModel { ReturnUrl = returnUrl ?? Url.Content("~/") };
+            ViewBag.RequiresAuthentication = !string.IsNullOrWhiteSpace(returnUrl)
+                && returnUrl != Url.Content("~/");
             if (TempData["ExternalLoginError"] is string externalLoginError)
             {
                 ModelState.AddModelError(string.Empty, externalLoginError);
             }
             return View(model);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult AccessDenied(string? returnUrl = null)
+        {
+            Response.StatusCode = StatusCodes.Status403Forbidden;
+            ViewBag.ReturnUrl = returnUrl;
+            return View();
         }
 
         [HttpPost]
@@ -295,7 +307,7 @@ namespace Playlist.Controllers
                 return RedirectToAction(nameof(Profile));
             }
 
-            var uploadDirectory = Path.Combine(_environment.WebRootPath, "uploads", "profile-images");
+            var uploadDirectory = Path.Combine(_storage.UploadsRoot, "profile-images");
             Directory.CreateDirectory(uploadDirectory);
 
             var oldProfileImageUrl = appUser.ProfileImageUrl;

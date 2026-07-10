@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -16,16 +17,27 @@ namespace Playlist.Tests
 {
     public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     {
+        // Ovdje pripremamo sigurnu testnu verziju aplikacije bez prave Azure baze.
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureLogging(logging =>
+            {
+                logging.ClearProviders();
+                logging.AddConsole();
+            });
+
             builder.ConfigureServices(services =>
             {
+                services.AddDataProtection().UseEphemeralDataProtectionProvider();
+
                 var musicBarDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<MusicBarDbContext>));
                 if (musicBarDescriptor != null)
                 {
                     services.Remove(musicBarDescriptor);
                 }
 
+                // MusicBar podaci koriste bazu samo u memoriji i nestaju nakon testova.
                 services.AddDbContext<MusicBarDbContext>(options =>
                 {
                     options.UseInMemoryDatabase("PlaylistTests");
@@ -37,11 +49,13 @@ namespace Playlist.Tests
                     services.Remove(identityDescriptor);
                 }
 
+                // Identity korisnici i role takoder koriste izoliranu bazu u memoriji.
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
                     options.UseInMemoryDatabase("IdentityTests");
                 });
 
+                // Lazna autentikacija omogucuje testiranje Admin ruta bez stvarnog logina.
                 services.AddAuthentication(options =>
                 {
                     options.DefaultAuthenticateScheme = TestAuthHandler.AuthenticationScheme;
@@ -59,19 +73,20 @@ namespace Playlist.Tests
         public TestAuthHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
-            UrlEncoder encoder,
-            ISystemClock clock)
-            : base(options, logger, encoder, clock)
+            UrlEncoder encoder)
+            : base(options, logger, encoder)
         {
         }
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
+            // Posebno zaglavlje simulira potpuno neprijavljenog korisnika.
             if (Request.Headers.TryGetValue("X-Test-Auth", out var value) && value == "none")
             {
                 return Task.FromResult(AuthenticateResult.NoResult());
             }
 
+            // Svi ostali testni zahtjevi dobivaju identitet s Admin rolom.
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, "test-user"),

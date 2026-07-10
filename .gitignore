@@ -1,0 +1,13 @@
+# Runtime logs
+src/Playlist/Playlist/Logs/
+src/Playlist/Playlist/App_Data/
+
+# Node and Playwright artifacts
+src/Playlist/node_modules/
+src/Playlist/playwright-report/
+src/Playlist/test-results/
+
+# Local IDE state and Azure publishing credentials
+.vscode/settings.json
+src/Playlist/Playlist/Properties/PublishProfiles/
+*.csproj.user

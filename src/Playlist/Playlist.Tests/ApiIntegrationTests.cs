@@ -5,7 +5,10 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Playlist.Models;
+using Playlist.ViewModels;
 using Playlist.ViewModels.Api;
 using Xunit;
 
@@ -13,6 +16,7 @@ namespace Playlist.Tests;
 
 public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
 {
+    // Factory pokrece cijelu aplikaciju u testnom okruzenju i daje nam testni HTTP klijent.
     private readonly CustomWebApplicationFactory _factory;
 
     public ApiIntegrationTests(CustomWebApplicationFactory factory)
@@ -30,6 +34,7 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         yield return new object[] { "/api/user" };
     }
 
+    // Provjerava da GET lista radi za svaki API controller.
     [Theory]
     [MemberData(nameof(ApiRoutes))]
     public async Task GetAll_ReturnsOk_ForEveryApiController(string route)
@@ -39,6 +44,7 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
+    // Provjerava da nepostojeci ID vraca HTTP 404 za svaki API.
     [Theory]
     [MemberData(nameof(ApiRoutes))]
     public async Task GetById_ReturnsNotFound_ForUnknownId(string route)
@@ -48,6 +54,7 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    // Provjerava da neprijavljeni korisnik ne moze mijenjati podatke.
     [Fact]
     public async Task ProtectedEndpoint_ReturnsUnauthorized_WithoutAuthentication()
     {
@@ -62,6 +69,89 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
+    // Provjerava da globalna pretraga pronalazi stranice i podatke iz kataloga.
+    [Fact]
+    public async Task GlobalSearch_ReturnsPagesAndCatalogData()
+    {
+        var results = await _factory.CreateClient()
+            .GetFromJsonAsync<List<GlobalSearchResult>>("/global-search?term=Nirvana");
+
+        results.Should().NotBeNullOrEmpty();
+        results!.Should().Contain(result => result.Type == "Artist" && result.Title == "Nirvana");
+        results.Should().Contain(result => result.Type == "Song" && result.Subtitle == "Nirvana");
+    }
+
+    // Pretraga s jednim znakom mora vratiti praznu listu.
+    [Fact]
+    public async Task GlobalSearch_ReturnsEmptyList_ForShortTerm()
+    {
+        var results = await _factory.CreateClient()
+            .GetFromJsonAsync<List<GlobalSearchResult>>("/global-search?term=n");
+
+        results.Should().BeEmpty();
+    }
+
+    // Admin mora moci otvoriti AI Import stranicu.
+    [Fact]
+    public async Task AiImportPage_LoadsForAdmin()
+    {
+        var response = await _factory.CreateClient().GetAsync("/AiImport");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await response.Content.ReadAsStringAsync()).Should().Contain("AI Music Import");
+    }
+
+    // Neprijavljeni korisnik ne smije otvoriti AI Import.
+    [Fact]
+    public async Task AiImportPage_RequiresAuthentication()
+    {
+        var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+        client.DefaultRequestHeaders.Add("X-Test-Auth", "none");
+
+        var response = await client.GetAsync("/AiImport");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    // Provjerava da je manager automatski dodan u MusicBar korisnike.
+    [Fact]
+    public async Task Users_IncludeSeededManager()
+    {
+        var response = await _factory.CreateClient().GetAsync("/api/user");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await response.Content.ReadAsStringAsync())
+            .Should().Contain("manager@musicbar.local");
+    }
+
+    // Provjerava demo prijavu: hrc@gmail.com / password.
+    [Fact]
+    public async Task SeededHrcUser_AcceptsDemoPassword()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+        var user = await userManager.FindByEmailAsync("hrc@gmail.com");
+
+        user.Should().NotBeNull();
+        (await userManager.CheckPasswordAsync(user!, "password")).Should().BeTrue();
+    }
+
+    // Zabranjeni pristup mora vratiti 403 i nasu animiranu poruku.
+    [Fact]
+    public async Task AccessDeniedPage_ReturnsAnimatedForbiddenMessage()
+    {
+        var response = await _factory.CreateClient().GetAsync("/Account/AccessDenied");
+        var content = await response.Content.ReadAsStringAsync();
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        content.Should().Contain("This area is off limits.");
+        content.Should().Contain("forbidden-card");
+    }
+
+    // Potpuni Artist CRUD: Create, Read, Update i Delete.
     [Fact]
     public async Task Artist_CRUD_Works()
     {
@@ -91,6 +181,7 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         await AssertDeleteAsync(client, "/api/artist", created.ArtistId);
     }
 
+    // Potpuni Genre CRUD: Create, Read, Update i Delete.
     [Fact]
     public async Task Genre_CRUD_Works()
     {
@@ -112,6 +203,7 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         await AssertDeleteAsync(client, "/api/genre", created.GenreId);
     }
 
+    // Potpuni Album CRUD: Create, Read, Update i Delete.
     [Fact]
     public async Task Album_CRUD_Works()
     {
@@ -143,6 +235,7 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         await AssertDeleteAsync(client, "/api/album", created.AlbumId);
     }
 
+    // Potpuni Song CRUD: Create, Read, Update i Delete.
     [Fact]
     public async Task Song_CRUD_Works()
     {
@@ -179,6 +272,7 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         await AssertDeleteAsync(client, "/api/song", created.SongId);
     }
 
+    // Potpuni User CRUD: Create, Read, Update i Delete.
     [Fact]
     public async Task User_CRUD_Works()
     {
@@ -207,6 +301,7 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         await AssertDeleteAsync(client, "/api/user", created.UserId);
     }
 
+    // Potpuni Playlist CRUD, ukljucujuci vlasnika i povezanu pjesmu.
     [Fact]
     public async Task Playlist_CRUD_Works()
     {
@@ -242,6 +337,7 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         await AssertDeleteAsync(client, "/api/playlist", created.PlaylistId);
     }
 
+    // PUT nad nepostojecim zapisom mora vratiti 404 za svaki API.
     [Theory]
     [InlineData("/api/artist")]
     [InlineData("/api/album")]
@@ -267,6 +363,7 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    // DELETE nad nepostojecim zapisom mora vratiti 404 za svaki API.
     [Theory]
     [MemberData(nameof(ApiRoutes))]
     public async Task Delete_ReturnsNotFound_ForUnknownId(string route)
@@ -276,6 +373,7 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    // Neispravni i prazni DTO objekti moraju vratiti HTTP 400.
     [Fact]
     public async Task Post_ReturnsBadRequest_ForInvalidDto()
     {

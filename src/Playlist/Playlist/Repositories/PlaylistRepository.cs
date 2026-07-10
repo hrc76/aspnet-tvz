@@ -117,7 +117,7 @@ public List<Playlist.Models.Playlist> GetByOwnerId(int ownerId)
         .ToList();
 }
 
-public void UpdateBasicInfo(int playlistId, string name, string description, bool isPublic)
+public void UpdateBasicInfo(int playlistId, string name, string description, bool isPublic, string? coverImageUrl)
 {
     var playlist = _context.Playlists.FirstOrDefault(p => p.PlaylistId == playlistId);
 
@@ -129,6 +129,7 @@ public void UpdateBasicInfo(int playlistId, string name, string description, boo
     playlist.Name = name;
     playlist.Description = description;
     playlist.IsPublic = isPublic;
+    playlist.CoverImageUrl = coverImageUrl;
 
     _context.SaveChanges();
 }

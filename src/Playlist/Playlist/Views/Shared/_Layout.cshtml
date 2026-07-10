@@ -48,6 +48,19 @@
             </a>
         </div>
 
+        <div class="global-search" id="globalSearch">
+            <label class="visually-hidden" for="globalSearchInput">Search pages and music</label>
+            <span class="global-search-icon" aria-hidden="true"></span>
+            <input id="globalSearchInput"
+                   type="search"
+                   placeholder="Search everything..."
+                   autocomplete="off"
+                   aria-controls="globalSearchResults"
+                   aria-expanded="false" />
+            <span class="global-search-shortcut" aria-hidden="true">Ctrl K</span>
+            <div id="globalSearchResults" class="global-search-results" role="listbox"></div>
+        </div>
+
         <nav class="sidebar-nav">
 
             <!-- Main navigation -->
@@ -89,6 +102,12 @@
                    class="@NavClass("User")">
                     <span class="nav-icon">◈</span> Users
                 </a>
+                @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                {
+                    <a asp-controller="AiImport" asp-action="Index" class="@NavClass("AiImport")">
+                        <span class="nav-icon">AI</span> AI Import
+                    </a>
+                }
             </div>
 
             <!-- History -->

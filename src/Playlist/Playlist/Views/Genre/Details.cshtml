@@ -38,7 +38,7 @@
     </div>
 
     <div class="genre-stats-card">
-        <span>@Model.Songs.Count</span>
+        <span>@(Model.Songs?.Count ?? 0)</span>
         <p>songs in this sound zone</p>
     </div>
 </section>

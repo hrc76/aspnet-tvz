@@ -8,6 +8,16 @@
 }
 
 <div class="auth-page">
+    @if (ViewBag.RequiresAuthentication == true)
+    {
+        <div class="auth-access-notice" role="alert">
+            <span class="auth-access-notice-icon" aria-hidden="true">!</span>
+            <div>
+                <strong>Sign in required</strong>
+                <p>You need to sign in before opening that page.</p>
+            </div>
+        </div>
+    }
     <section class="auth-intro">
         <p class="mb-eyebrow">Welcome back</p>
         <h1>Return to your music.</h1>

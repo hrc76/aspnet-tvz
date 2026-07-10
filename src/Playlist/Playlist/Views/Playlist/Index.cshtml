@@ -30,6 +30,10 @@
         <article class="entity-card">
             <div class="entity-card-cover">
                 <div class="album-cover-wrap" style="background: @PGrad(p.Name)">
+                    @if (!string.IsNullOrWhiteSpace(p.CoverImageUrl))
+                    {
+                        <img src="@p.CoverImageUrl" class="album-cover-real" alt="@p.Name cover" loading="lazy" />
+                    }
                     <span class="album-cover-letter">@p.Name.Substring(0, 1).ToUpper()</span>
                 </div>
             </div>
@@ -39,7 +43,11 @@
             <p class="entity-meta">@p.Songs.Count songs · @(p.IsPublic ? "Public" : "Private")</p>
             <div class="entity-actions">
                 <a asp-action="Details" asp-route-id="@p.PlaylistId" class="mb-btn mb-btn-ghost btn-sm">Open</a>
-                <a asp-action="Edit" asp-route-id="@p.PlaylistId" class="mb-btn mb-btn-secondary btn-sm">Edit</a>
+                @if (User.IsInRole("Admin") || User.IsInRole("Manager") ||
+                     string.Equals(User.Identity?.Name, p.Owner.Email, StringComparison.OrdinalIgnoreCase))
+                {
+                    <a asp-action="Edit" asp-route-id="@p.PlaylistId" class="mb-btn mb-btn-secondary btn-sm">Edit</a>
+                }
             </div>
         </article>
     }

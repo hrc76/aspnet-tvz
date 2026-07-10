@@ -59,15 +59,33 @@ namespace Playlist.Repositories
             existing.TotalTracks = album.TotalTracks;
             existing.Rating = album.Rating;
             existing.ArtistId = album.ArtistId;
+            existing.CoverUrl = album.CoverUrl;
             _context.SaveChanges();
         }
 
         public void Delete(int id)
         {
-            var album = _context.Albums.FirstOrDefault(a => a.AlbumId == id);
+            var album = _context.Albums
+                .Include(a => a.Songs)
+                    .ThenInclude(song => song.Playlists)
+                .FirstOrDefault(a => a.AlbumId == id);
             if (album == null) return;
+
+            var songIds = album.Songs.Select(song => song.SongId).ToList();
+            var savedAlbums = _context.SavedAlbums.Where(item => item.AlbumId == id).ToList();
+            var favorites = _context.FavoriteSongs.Where(item => songIds.Contains(item.SongId)).ToList();
+            var history = _context.ListeningHistories.Where(item => songIds.Contains(item.SongId)).ToList();
+
+            using var transaction = _context.Database.IsRelational()
+                ? _context.Database.BeginTransaction()
+                : null;
+            _context.SavedAlbums.RemoveRange(savedAlbums);
+            _context.FavoriteSongs.RemoveRange(favorites);
+            _context.ListeningHistories.RemoveRange(history);
+            _context.Songs.RemoveRange(album.Songs);
             _context.Albums.Remove(album);
             _context.SaveChanges();
+            transaction?.Commit();
         }
     }
 }

@@ -27,6 +27,10 @@
 <section class="playlist-hero">
     <div class="playlist-cover">
         <div class="album-cover-wrap" style="background:@grad">
+            @if (!string.IsNullOrWhiteSpace(Model.CoverImageUrl))
+            {
+                <img src="@Model.CoverImageUrl" class="album-cover-real" alt="@Model.Name cover" />
+            }
             <span class="album-cover-letter" style="font-size:5rem">@Model.Name.Substring(0, 1).ToUpper()</span>
         </div>
     </div>
@@ -56,19 +60,23 @@
                     ▶ Play Playlist
                 </button>
             }
-            <a asp-controller="Playlist" asp-action="Edit" asp-route-id="@Model.PlaylistId" class="mb-btn mb-btn-ghost">
-                Edit
-            </a>
+            @if (ViewBag.CanManage == true)
+            {
+                <a asp-controller="Playlist" asp-action="Edit" asp-route-id="@Model.PlaylistId" class="mb-btn mb-btn-ghost">Edit</a>
+            }
             <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">
                 Library
             </a>
         </div>
 
-        <form asp-controller="Playlist" asp-action="Delete" asp-route-id="@Model.PlaylistId" method="post"
-              onsubmit="return confirm('Delete this playlist?');" class="mt-3">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="mb-btn mb-btn-danger">Delete Playlist</button>
-        </form>
+        @if (ViewBag.CanManage == true)
+        {
+            <form asp-controller="Playlist" asp-action="Delete" asp-route-id="@Model.PlaylistId" method="post"
+                  onsubmit="return confirm('Delete this playlist?');" class="mt-3">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="mb-btn mb-btn-danger">Delete Playlist</button>
+            </form>
+        }
     </div>
 </section>
 
@@ -104,12 +112,15 @@
 
                     <span class="track-duration">@song.Duration</span>
 
+                    @if (ViewBag.CanManage == true)
+                    {
                     <form asp-controller="Playlist" asp-action="RemoveSong" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="playlistId" value="@Model.PlaylistId" />
                         <input type="hidden" name="songId" value="@song.SongId" />
                         <button type="submit" class="danger-link">Remove</button>
                     </form>
+                    }
                 </article>
                 index++;
             }
@@ -124,80 +135,8 @@
     }
 </section>
 
-    <section class="record-attachments mt-5">
-        <div class="mb-section-header">
-            <div>
-                <p class="mb-eyebrow">Attachments</p>
-                <h2>Playlist files</h2>
-            </div>
-        </div>
-
-        @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || User.IsInRole("Manager")))
-        {
-            <div class="attachment-upload-box mb-4">
-                <label for="playlistFileUpload" class="mb-input-label">Upload one or more files</label>
-                <input id="playlistFileUpload" type="file" multiple class="mb-input" />
-                <button type="button" class="mb-btn mb-btn-primary mt-3" onclick="uploadAttachments()">Upload</button>
-                <p class="mb-muted mt-2">Files are stored on the server and metadata is saved to the playlist.</p>
-            </div>
-        }
-
-        <div id="attachmentList"></div>
-    </section>
-
     <div class="details-actions mt-4">
         <a asp-controller="Home" asp-action="Index" class="mb-btn mb-btn-ghost">Home</a>
         <a asp-controller="Library" asp-action="Index" class="mb-btn mb-btn-ghost">Library</a>
         <a asp-controller="Discover" asp-action="Index" class="mb-btn mb-btn-ghost">Discover</a>
     </div>
-
-@section Scripts {
-    <script>
-        const playlistId = @Model.PlaylistId;
-
-        async function loadAttachments() {
-            const response = await fetch(`/Playlist/GetAttachments?playlistId=${playlistId}`);
-            if (response.ok) {
-                const html = await response.text();
-                document.getElementById('attachmentList').innerHTML = html;
-            }
-        }
-
-        async function uploadAttachments() {
-            const input = document.getElementById('playlistFileUpload');
-            if (!input.files.length) {
-                return;
-            }
-
-            for (const file of input.files) {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('playlistId', playlistId);
-
-                await fetch('/Playlist/UploadAttachment', {
-                    method: 'POST',
-                    body: formData
-                });
-            }
-
-            input.value = '';
-            await loadAttachments();
-        }
-
-        async function deleteAttachment(id) {
-            const response = await fetch('/Playlist/DeleteAttachment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `id=${id}`
-            });
-
-            if (response.ok) {
-                await loadAttachments();
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', loadAttachments);
-    </script>
-}

@@ -32,17 +32,6 @@ namespace Playlist.ViewModels.Api
         public string Genre { get; set; } = string.Empty;
     }
 
-    public class PlaylistAttachmentDto
-    {
-        public int Id { get; set; }
-        public int PlaylistId { get; set; }
-        public string FileName { get; set; } = string.Empty;
-        public string FilePath { get; set; } = string.Empty;
-        public string ContentType { get; set; } = string.Empty;
-        public long FileSize { get; set; }
-        public DateTime CreatedAt { get; set; }
-    }
-
     public class UserSummaryDto
     {
         public int UserId { get; set; }
@@ -179,9 +168,9 @@ namespace Playlist.ViewModels.Api
         public DateTime CreatedAt { get; set; }
         public bool IsPublic { get; set; }
         public int Likes { get; set; }
+        public string? CoverImageUrl { get; set; }
         public UserSummaryDto? Owner { get; set; }
         public List<SongSummaryDto> Songs { get; set; } = new List<SongSummaryDto>();
-        public List<PlaylistAttachmentDto> Attachments { get; set; } = new List<PlaylistAttachmentDto>();
     }
 
     public class PlaylistCreateUpdateDto
@@ -195,6 +184,9 @@ namespace Playlist.ViewModels.Api
         public string Description { get; set; } = string.Empty;
 
         public bool IsPublic { get; set; }
+
+        [StringLength(500)]
+        public string? CoverImageUrl { get; set; }
 
         [Range(1, int.MaxValue)]
         public int? OwnerId { get; set; }
@@ -306,18 +298,6 @@ namespace Playlist.ViewModels.Api
                 GenreSummary = song.Genre?.ToSummaryDto() ?? new GenreSummaryDto()
             };
 
-        public static PlaylistAttachmentDto ToDto(this PlaylistAttachment attachment)
-            => new()
-            {
-                Id = attachment.ID,
-                PlaylistId = attachment.PlaylistId,
-                FileName = attachment.FileName,
-                FilePath = attachment.FilePath,
-                ContentType = attachment.ContentType,
-                FileSize = attachment.FileSize,
-                CreatedAt = attachment.CreatedAt
-            };
-
         public static PlaylistDto ToDto(this Playlist.Models.Playlist playlist)
             => new()
             {
@@ -327,6 +307,7 @@ namespace Playlist.ViewModels.Api
                 CreatedAt = playlist.CreatedAt,
                 IsPublic = playlist.IsPublic,
                 Likes = playlist.Likes,
+                CoverImageUrl = playlist.CoverImageUrl,
                 Owner = playlist.Owner == null ? null : new UserSummaryDto
                 {
                     UserId = playlist.Owner.UserId,
@@ -338,8 +319,7 @@ namespace Playlist.ViewModels.Api
                     Title = s.Title,
                     Artist = s.Artist?.StageName ?? string.Empty,
                     Genre = s.Genre?.Name ?? string.Empty
-                }).ToList() ?? new List<SongSummaryDto>(),
-                Attachments = playlist.Attachments?.Select(a => a.ToDto()).ToList() ?? new List<PlaylistAttachmentDto>()
+                }).ToList() ?? new List<SongSummaryDto>()
             };
 
         public static UserDto ToDto(this User user)

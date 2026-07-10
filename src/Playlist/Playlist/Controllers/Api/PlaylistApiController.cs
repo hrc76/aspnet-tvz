@@ -29,7 +29,6 @@ namespace Playlist.Controllers.Api
                     .ThenInclude(s => s.Artist)
                 .Include(p => p.Songs)
                     .ThenInclude(s => s.Genre)
-                .Include(p => p.Attachments)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -51,7 +50,6 @@ namespace Playlist.Controllers.Api
                     .ThenInclude(s => s.Artist)
                 .Include(p => p.Songs)
                     .ThenInclude(s => s.Genre)
-                .Include(p => p.Attachments)
                 .FirstOrDefault(p => p.PlaylistId == id);
 
             if (playlist == null)
@@ -89,6 +87,7 @@ namespace Playlist.Controllers.Api
                 Description = model.Description,
                 CreatedAt = DateTime.UtcNow,
                 IsPublic = model.IsPublic,
+                CoverImageUrl = model.CoverImageUrl,
                 Likes = 0,
                 OwnerId = model.OwnerId.Value,
                 Songs = songs
@@ -99,7 +98,6 @@ namespace Playlist.Controllers.Api
 
             _context.Entry(playlist).Reference(p => p.Owner).Load();
             _context.Entry(playlist).Collection(p => p.Songs).Query().Include(s => s.Artist).Include(s => s.Genre).Load();
-            _context.Entry(playlist).Collection(p => p.Attachments).Load();
 
             return CreatedAtAction(nameof(Get), new { id = playlist.PlaylistId }, playlist.ToDto());
         }
@@ -125,6 +123,7 @@ namespace Playlist.Controllers.Api
             playlist.Name = model.Name;
             playlist.Description = model.Description;
             playlist.IsPublic = model.IsPublic;
+            playlist.CoverImageUrl = model.CoverImageUrl;
             if (model.OwnerId.HasValue)
             {
                 playlist.OwnerId = model.OwnerId.Value;
@@ -140,7 +139,6 @@ namespace Playlist.Controllers.Api
             _context.SaveChanges();
             _context.Entry(playlist).Reference(p => p.Owner).Load();
             _context.Entry(playlist).Collection(p => p.Songs).Query().Include(s => s.Artist).Include(s => s.Genre).Load();
-            _context.Entry(playlist).Collection(p => p.Attachments).Load();
 
             return Ok(playlist.ToDto());
         }

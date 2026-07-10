@@ -37,8 +37,8 @@
             <span>@Model.Country</span>
             <span>Debut: @Model.DebutDate.Year</span>
             <span>@(Model.IsActive ? "Active" : "Inactive")</span>
-            <span>@Model.Albums.Count albums</span>
-            <span>@Model.Songs.Count songs</span>
+            <span>@(Model.Albums?.Count ?? 0) albums</span>
+            <span>@(Model.Songs?.Count ?? 0) songs</span>
         </div>
 
         @if (Model.Songs != null && Model.Songs.Any())

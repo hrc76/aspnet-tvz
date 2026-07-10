@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "Access denied";
+}
+
+<div class="forbidden-page">
+    <section class="forbidden-card" role="alert" aria-labelledby="forbiddenTitle">
+        <div class="forbidden-icon" aria-hidden="true">
+            <span>!</span>
+        </div>
+        <p class="mb-eyebrow">Error 403</p>
+        <h1 id="forbiddenTitle">This area is off limits.</h1>
+        <p>Your account is signed in, but it does not have permission to perform that action.</p>
+
+        <div class="forbidden-actions">
+            <a asp-controller="Home" asp-action="Index" class="mb-btn mb-btn-primary">Back to MusicBar</a>
+            <button type="button" class="mb-btn mb-btn-ghost" onclick="history.back()">Go back</button>
+        </div>
+
+        <small>If you believe this is a mistake, ask an administrator to check your role.</small>
+    </section>
+</div>
