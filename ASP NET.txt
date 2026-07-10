@@ -1,0 +1,73 @@
+ASP NET
+
+https://musicbar-ht2026.azurewebsites.net/
+
+12 koraka playwrighta
+
+1. Otvara početnu stranicu.
+2. Provjerava dashboard.
+3. Aktivira global search s Ctrl + K.
+4. Pretražuje cijeli katalog.
+5. Otvara izvođača.
+6. Provjerava stranicu izvođača.
+7. Pretražuje album.
+8. Provjerava detalje albuma.
+9. Otvara katalog pjesama.
+10. Koristi lokalnu pretragu pjesama.
+11. Provjerava detalje odabrane pjesme.
+12. Prebacuje viewport na mobitel i provjerava mobilni sidebar.
+
+Drugi Playwright 10 koraka
+
+1. Admin login.
+2. Remove album from Library ako je već spremljen.
+3. Save album to Library.
+4. Provjeru albuma u Libraryju.
+5. Remove from Library.
+6. Kreiranje privremenog albuma preko API-ja.
+7. Kreiranje pjesme povezane s tim albumom.
+8. Brisanje albuma.
+9. Provjeru da je album obrisan.
+10. Provjeru da je povezana pjesma također sigurno obrisana.
+
+cd src/Playlist
+npm run test:e2e
+npm run test:e2e:headed
+
+testovi: dotnet test .\src\Playlist\Playlist.sln -c Release
+
+cd src\Playlist
+$env:PLAYWRIGHT_BASE_URL="https://musicbar-ht2026.azurewebsites.net"
+npx playwright test
+Remove-Item Env:PLAYWRIGHT_BASE_URL
+
+cd src/Playlist
+$env:PLAYWRIGHT_BASE_URL="https://musicbar-ht2026.azurewebsites.net"
+npm run test:e2e:headed
+Remove-Item Env:PLAYWRIGHT_BASE_URL
+
+dotnet test .\src\Playlist\Playlist.Tests\Playlist.Tests.csproj -c Release --filter "FullyQualifiedName~ApiIntegrationTests"
+dotnet test .\src\Playlist\Playlist.Tests\Playlist.Tests.csproj -c Release --filter "FullyQualifiedName~Album_CRUD_Works"
+dotnet test .\src\Playlist\Playlist.Tests\Playlist.Tests.csproj -c Release --filter "FullyQualifiedName~ImageStorageServiceTests"
+
+npm run mcp:test
+
+Add Come as You Are by Nirvana from the album Nevermind.
+Genre is Rock, duration is 3 minutes 38 seconds, released in 1991,
+mood is Energetic and it is not explicit.
+
+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
+
+admin@musicbar.local
+Admin!12345
+
+manager@musicbar.local
+Manager!12345
+
+dotnet publish .\src\Playlist\Playlist\Playlist.csproj -c Release
+
+https://musicbar-ht2026.azurewebsites.net/health
+
+GOOGLE CLIENT ID: 645478200656-gtuii6m8l62e3d3v53ftu5sovs5e2fgi.apps.googleusercontent.com
+
+CLIENT SECRET: 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
