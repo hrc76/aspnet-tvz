@@ -1,0 +1,229 @@
+@model global::Playlist.ViewModels.AiDjViewModel
+@using System.Text.Json
+@{ ViewData["Title"] = "AI DJ"; }
+
+<div class="ai-dj-page">
+    <section class="ai-dj-hero">
+        <div>
+            <p class="mb-eyebrow">Personalized by your MusicBar taste</p>
+            <h1>AI DJ</h1>
+            <p>Describe the moment, mood or sound you want. AI DJ combines your request with your favorites and listening history, then selects only songs that really exist in MusicBar.</p>
+        </div>
+        <div class="ai-dj-orb" aria-hidden="true"><span>AI</span></div>
+    </section>
+
+    <form asp-action="Generate" method="post" class="account-form ai-dj-prompt-card js-ai-generate-form">
+        @Html.AntiForgeryToken()
+        @if (!Model.ApiConfigured)
+        {
+            <div class="alert alert-warning">AI DJ is currently unavailable because <code>OPENAI_API_KEY</code> is not configured.</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger">@Model.ErrorMessage</div>
+        }
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="form-group">
+            <label asp-for="Request">What should we play?</label>
+            <textarea asp-for="Request" class="mb-input ai-prompt" rows="4" placeholder="An energetic workout mix with rock and techno, but surprise me with one different track."></textarea>
+            <span asp-validation-for="Request" class="text-danger"></span>
+        </div>
+        <div class="ai-dj-chips" aria-label="Example prompts">
+            <button type="button" data-ai-prompt="A high-energy workout mix without slow songs.">Workout energy</button>
+            <button type="button" data-ai-prompt="Late-night chill songs, mostly electronic and calm.">Late-night chill</button>
+            <button type="button" data-ai-prompt="Play favorites from my taste, but add a few discoveries I rarely hear.">Rediscover</button>
+            <button type="button" data-ai-prompt="Surprise me with a varied mix across several genres.">Surprise me</button>
+        </div>
+        <button type="submit" class="mb-btn mb-btn-primary" disabled="@(!Model.ApiConfigured)">Generate my AI mix</button>
+    </form>
+
+    <div class="ai-dj-loading" hidden role="status" aria-live="polite" aria-label="AI DJ is generating your mix">
+        <div class="ai-dj-loading-panel">
+            <div class="ai-pixel-disc" aria-hidden="true">
+                <span></span>
+            </div>
+            <p class="mb-eyebrow">AI DJ is mixing</p>
+            <h2>Building your session<span class="ai-pixel-dots" aria-hidden="true"></span></h2>
+            <div class="ai-pixel-equalizer" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <p>Reading your taste and finding the right tracks.</p>
+        </div>
+    </div>
+
+    @if (Model.Recommendation != null && Model.Songs.Any())
+    {
+        var queue = JsonSerializer.Serialize(Model.Songs.Select(song => new
+        {
+            id = song.SongId,
+            title = song.Title,
+            artist = song.Artist?.StageName ?? "",
+            audioUrl = song.AudioUrl ?? "",
+            coverColor = "#ff8a1f"
+        }));
+        <section class="ai-dj-result fade-in-form">
+            <div class="ai-dj-result-header">
+                <div class="ai-dj-mix-art" aria-hidden="true">
+                    <span>AI</span>
+                    <i></i><i></i><i></i>
+                </div>
+                <div>
+                    <p class="mb-eyebrow">Your generated session</p>
+                    <h2>@Model.Recommendation.PlaylistName</h2>
+                    <p>@Model.Recommendation.Description</p>
+                    <div class="ai-dj-result-stats">
+                        <span>@Model.Songs.Count tracks</span>
+                        <span>@TimeSpan.FromTicks(Model.Songs.Sum(song => song.Duration.Ticks)).ToString(@"h\:mm\:ss")</span>
+                        <span>Made for you</span>
+                    </div>
+                </div>
+                <button type="button" class="mb-btn mb-btn-primary ai-dj-play-all js-play-all-btn" data-queue="@queue"><span aria-hidden="true">▶</span> Play mix</button>
+            </div>
+
+            <div class="ai-dj-explanation"><strong>Why this mix?</strong> @Model.Recommendation.Explanation</div>
+
+            <div class="ai-dj-track-list">
+                @for (var index = 0; index < Model.Songs.Count; index++)
+                {
+                    var song = Model.Songs[index];
+                    var songJson = JsonSerializer.Serialize(new
+                    {
+                        id = song.SongId,
+                        title = song.Title,
+                        artist = song.Artist?.StageName ?? "",
+                        audioUrl = song.AudioUrl ?? "",
+                        coverColor = "#ff8a1f"
+                    });
+                    <article class="ai-dj-track" data-song-id="@song.SongId" data-song="@songJson">
+                        <span class="ai-dj-track-number">@(index + 1)</span>
+                        <button type="button" class="play-btn js-play-btn" data-song="@songJson" aria-label="Play @song.Title">▶</button>
+                        <div class="ai-dj-track-art">
+                            @if (!string.IsNullOrWhiteSpace(song.Album?.CoverUrl))
+                            {
+                                <img src="@song.Album.CoverUrl" alt="" loading="lazy" />
+                            }
+                            else
+                            {
+                                <span>@song.Title.Substring(0, 1).ToUpper()</span>
+                            }
+                        </div>
+                        <div class="ai-dj-track-main">
+                            <h3>@song.Title</h3>
+                            <p>@song.Artist?.StageName <span>·</span> @song.Album?.Title</p>
+                        </div>
+                        <div class="ai-dj-track-tags"><span>@song.Genre?.Name</span><span>@song.Mood</span></div>
+                        <time>@song.Duration.ToString(@"m\:ss")</time>
+                        <div class="ai-dj-track-menu">
+                            <button type="button" class="ai-dj-track-menu-toggle" aria-label="Options for @song.Title" aria-expanded="false">•••</button>
+                            <div class="ai-dj-track-menu-popover" hidden>
+                                <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId">View song details</a>
+                                <button type="button" class="js-ai-remove-track">Remove from mix</button>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+
+            <form asp-action="Save" method="post" class="account-form ai-dj-save-form">
+                @Html.AntiForgeryToken()
+                @foreach (var songId in Model.Recommendation.SongIds)
+                {
+                    <input type="hidden" name="SongIds" value="@songId" data-ai-song-input="@songId" />
+                }
+                <p class="form-section-label">Save this session</p>
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="PlaylistName">Playlist name</label>
+                        <input id="PlaylistName" name="PlaylistName" value="@Model.Recommendation.PlaylistName" class="mb-input" maxlength="80" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Description">Description</label>
+                        <input id="Description" name="Description" value="@Model.Recommendation.Description" class="mb-input" maxlength="250" />
+                    </div>
+                </div>
+                <label class="mb-checkbox"><input type="checkbox" name="IsPublic" value="true" /><span>Make playlist public</span></label>
+                <button type="submit" class="mb-btn mb-btn-secondary js-ai-save-mix">Save as playlist</button>
+            </form>
+        </section>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.querySelectorAll('[data-ai-prompt]').forEach(button => {
+            button.addEventListener('click', () => {
+                const prompt = document.getElementById('Request');
+                prompt.value = button.dataset.aiPrompt;
+                prompt.focus();
+            });
+        });
+
+        const generateForm = document.querySelector('.js-ai-generate-form');
+        const loadingScreen = document.querySelector('.ai-dj-loading');
+        generateForm?.addEventListener('submit', () => {
+            if (!generateForm.checkValidity()) return;
+            loadingScreen.hidden = false;
+            document.body.classList.add('ai-dj-is-loading');
+            generateForm.querySelector('button[type="submit"]').disabled = true;
+        });
+
+        const mix = document.querySelector('.ai-dj-result');
+        if (mix) {
+            const playAll = mix.querySelector('.js-play-all-btn');
+            const saveMix = mix.querySelector('.js-ai-save-mix');
+            const trackList = mix.querySelector('.ai-dj-track-list');
+            const trackCount = mix.querySelector('.ai-dj-result-stats span:first-child');
+
+            const closeMenus = except => {
+                mix.querySelectorAll('.ai-dj-track-menu-popover').forEach(menu => {
+                    if (menu !== except) menu.hidden = true;
+                });
+                mix.querySelectorAll('.ai-dj-track-menu-toggle').forEach(button => {
+                    if (button.nextElementSibling !== except) button.setAttribute('aria-expanded', 'false');
+                });
+            };
+
+            const refreshQueue = () => {
+                const songs = [...trackList.querySelectorAll('.ai-dj-track')]
+                    .map(track => JSON.parse(track.dataset.song));
+                playAll.dataset.queue = JSON.stringify(songs);
+                playAll.disabled = songs.length === 0;
+                saveMix.disabled = songs.length === 0;
+                if (trackCount) trackCount.textContent = `${songs.length} ${songs.length === 1 ? 'track' : 'tracks'}`;
+                trackList.querySelectorAll('.ai-dj-track-number').forEach((number, index) => number.textContent = index + 1);
+            };
+
+            mix.addEventListener('click', event => {
+                const toggle = event.target.closest('.ai-dj-track-menu-toggle');
+                if (toggle) {
+                    const menu = toggle.nextElementSibling;
+                    const willOpen = menu.hidden;
+                    closeMenus(menu);
+                    menu.hidden = !willOpen;
+                    toggle.setAttribute('aria-expanded', willOpen.toString());
+                    menu.classList.remove('open-up');
+                    if (willOpen && menu.getBoundingClientRect().bottom > window.innerHeight - 90) {
+                        menu.classList.add('open-up');
+                    }
+                    return;
+                }
+
+                const remove = event.target.closest('.js-ai-remove-track');
+                if (remove) {
+                    const track = remove.closest('.ai-dj-track');
+                    const songId = track.dataset.songId;
+                    mix.querySelector(`[data-ai-song-input="${songId}"]`)?.remove();
+                    track.remove();
+                    refreshQueue();
+                    return;
+                }
+
+                if (!event.target.closest('.ai-dj-track-menu')) closeMenus();
+            });
+
+            document.addEventListener('click', event => {
+                if (!event.target.closest('.ai-dj-track-menu')) closeMenus();
+            });
+            window.addEventListener('scroll', () => closeMenus(), { passive: true });
+        }
+    </script>
+}
