@@ -36,6 +36,8 @@
 </head>
 <body>
 
+<div id="playerAntiForgeryToken" hidden>@Html.AntiForgeryToken()</div>
+
 <div class="app-shell">
 
     <!-- ══ SIDEBAR ══════════════════════════════════════════ -->
@@ -77,6 +79,9 @@
                    class="@NavClass("Library")">
                     <span class="nav-icon">▤</span> Library
                 </a>
+                <a asp-controller="AiDj" asp-action="Index" class="@NavClass("AiDj")">
+                    <span class="nav-icon">AI</span> AI DJ
+                </a>
             </div>
 
             <!-- Admin CRUD -->
@@ -102,12 +107,6 @@
                    class="@NavClass("User")">
                     <span class="nav-icon">◈</span> Users
                 </a>
-                @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
-                {
-                    <a asp-controller="AiImport" asp-action="Index" class="@NavClass("AiImport")">
-                        <span class="nav-icon">AI</span> AI Import
-                    </a>
-                }
             </div>
 
             <!-- History -->
@@ -115,6 +114,10 @@
                 <a asp-controller="ListeningHistory" asp-action="Index"
                    class="@NavClass("ListeningHistory")">
                     <span class="nav-icon">≡</span> History
+                </a>
+                <a asp-controller="Analytics" asp-action="Index"
+                   class="@NavClass("Analytics")">
+                    <span class="nav-icon">▥</span> Analytics
                 </a>
                 <a asp-controller="Playlist" asp-action="Index"
                    class="@NavClass("Playlist")">
@@ -226,11 +229,32 @@
 
     <!-- Right: volume -->
     <div class="player-right">
+        <button id="playerQueueToggle" class="player-queue-toggle" title="Open queue" aria-controls="playerQueueDrawer" aria-expanded="false">
+            Q:<span id="playerQueueCount">0</span>
+        </button>
         <button id="playerMute" title="Mute">🔊</button>
-        <input type="range" id="playerVolume" min="0" max="100" value="70" class="player-range player-vol-range" />
+        <input type="range" id="playerVolume" min="0" max="100" value="50" class="player-range player-vol-range" />
     </div>
 
 </div>
+
+<aside class="player-queue-drawer" id="playerQueueDrawer" aria-label="Playback queue" hidden>
+    <div class="player-queue-head">
+        <div><span class="mb-eyebrow">Up next</span><h2>Queue</h2></div>
+        <div class="player-queue-head-actions">
+            <button type="button" id="playerSmartQueue" aria-pressed="false">Smart: off</button>
+            <button type="button" id="playerQueueClear">Clear</button>
+            <button type="button" id="playerQueueClose" aria-label="Close queue">X</button>
+        </div>
+    </div>
+    <div class="queue-pixel-display" aria-hidden="true">
+        <span class="queue-pixel-label">PLAYBACK.BUFFER</span>
+        <div class="queue-pixel-eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <span class="queue-pixel-signal">SIGNAL</span>
+    </div>
+    <div class="player-queue-list" id="playerQueueList"></div>
+    <p class="player-queue-empty" id="playerQueueEmpty">Queue is empty. Add a song with +Q.</p>
+</aside>
 
 <!-- Hidden HTML5 audio engine -->
 <audio id="mbAudio" preload="none"></audio>

@@ -115,6 +115,7 @@
                             <button type="button" class="ai-dj-track-menu-toggle" aria-label="Options for @song.Title" aria-expanded="false">•••</button>
                             <div class="ai-dj-track-menu-popover" hidden>
                                 <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId">View song details</a>
+                                <button type="button" class="js-queue-btn" data-song="@songJson">Add to queue</button>
                                 <button type="button" class="js-ai-remove-track">Remove from mix</button>
                             </div>
                         </div>

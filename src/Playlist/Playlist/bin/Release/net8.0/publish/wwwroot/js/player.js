@@ -7,8 +7,14 @@ var MBPlayer = (function () {
     var queue        = [];
     var currentIndex = -1;
     var isShuffling  = false;
+    var isSmartQueue = false;
+    var isExtendingQueue = false;
     var repeatMode   = 0;   // 0=off  1=all  2=one
     var audio;
+    var listenedMilliseconds = 0;
+    var listeningStartedAt = null;
+    var listeningTimer = null;
+    var historyRecorded = false;
 
     // ── Initialise ───────────────────────────────────────────────
     function init() {
@@ -19,6 +25,7 @@ var MBPlayer = (function () {
         bindAudioEvents();
         bindKeyboard();
         restoreState();
+        renderQueue();
     }
 
     function bindControls() {
@@ -29,6 +36,10 @@ var MBPlayer = (function () {
         on('playerRepeat',  'click', toggleRepeat);
         on('playerMute',    'click', toggleMute);
         on('playerLike',    'click', toggleLike);
+        on('playerQueueToggle', 'click', toggleQueueDrawer);
+        on('playerQueueClose',  'click', closeQueueDrawer);
+        on('playerQueueClear',  'click', clearQueue);
+        on('playerSmartQueue',  'click', toggleSmartQueue);
 
         var seek = document.getElementById('playerSeek');
         if (seek) seek.addEventListener('input', onSeek);
@@ -36,7 +47,7 @@ var MBPlayer = (function () {
         var vol = document.getElementById('playerVolume');
         if (vol) {
             vol.addEventListener('input', onVolume);
-            audio.volume = vol.value / 100;
+            restoreAudioPreferences(vol);
         }
     }
 
@@ -44,8 +55,14 @@ var MBPlayer = (function () {
         audio.addEventListener('timeupdate',    onTimeUpdate);
         audio.addEventListener('ended',         onEnded);
         audio.addEventListener('loadedmetadata',onMetadata);
-        audio.addEventListener('play',          function () { updatePlayBtn(true); });
-        audio.addEventListener('pause',         function () { updatePlayBtn(false); });
+        audio.addEventListener('play',          function () {
+            startListeningClock();
+            updatePlayBtn(true);
+        });
+        audio.addEventListener('pause',         function () {
+            pauseListeningClock();
+            updatePlayBtn(false);
+        });
         audio.addEventListener('error',         function () {
             document.getElementById('playerArtist').textContent = 'Could not load audio';
         });
@@ -67,6 +84,7 @@ var MBPlayer = (function () {
     function playSong(songData) {
         queue        = [songData];
         currentIndex = 0;
+        ensureQueueVisibility();
         loadAndPlay();
     }
 
@@ -74,16 +92,32 @@ var MBPlayer = (function () {
     function setQueue(songs, startIndex) {
         queue = songs;
         currentIndex = startIndex || 0;
+        ensureQueueVisibility();
+        renderQueue();
         loadAndPlay();
+    }
+
+    function addToQueue(songData) {
+        if (!songData || !songData.id) return;
+        queue.push(songData);
+        if (currentIndex < 0) {
+            currentIndex = 0;
+            updateNowPlayingUI(songData);
+        }
+        saveState();
+        renderQueue();
+        showQueueToast(songData.title + ' added to queue');
     }
 
     // ── Internal playback ─────────────────────────────────────────
     function loadAndPlay() {
         var song = queue[currentIndex];
         if (!song) return;
+        resetListeningClock();
         updateNowPlayingUI(song);
         updateNowPlayingRows(song.id);
         saveState();
+        renderQueue();
 
         getPlayableUrl(song, function (url) {
             if (!url) {
@@ -147,6 +181,7 @@ var MBPlayer = (function () {
         audio.volume = Math.max(0, Math.min(1, audio.volume + delta));
         var vol = document.getElementById('playerVolume');
         if (vol) vol.value = audio.volume * 100;
+        saveAudioPreferences();
         updateMuteBtn();
     }
 
@@ -169,6 +204,7 @@ var MBPlayer = (function () {
 
     function toggleMute() {
         audio.muted = !audio.muted;
+        saveAudioPreferences();
         updateMuteBtn();
     }
 
@@ -183,6 +219,44 @@ var MBPlayer = (function () {
     function onEnded() {
         if (repeatMode === 2) { audio.currentTime = 0; audio.play(); }
         else if (repeatMode === 1 || currentIndex < queue.length - 1) { next(); }
+        else if (isSmartQueue) { extendSmartQueue(); }
+    }
+
+    function toggleSmartQueue() {
+        isSmartQueue = !isSmartQueue;
+        try { localStorage.setItem('mb_smart_queue', isSmartQueue ? '1' : '0'); } catch (e) {}
+        updateSmartQueueButton();
+        showQueueToast('Smart Queue ' + (isSmartQueue ? 'enabled' : 'disabled'));
+    }
+
+    function updateSmartQueueButton() {
+        var button = document.getElementById('playerSmartQueue');
+        if (!button) return;
+        button.textContent = 'Smart: ' + (isSmartQueue ? 'on' : 'off');
+        button.setAttribute('aria-pressed', String(isSmartQueue));
+    }
+
+    function extendSmartQueue() {
+        var seed = queue[currentIndex];
+        if (!seed || isExtendingQueue) return;
+        isExtendingQueue = true;
+        var params = new URLSearchParams({ seedSongId: String(seed.id) });
+        queue.forEach(function (song) { params.append('excludeIds', String(song.id)); });
+        fetch('/Song/SmartQueue?' + params.toString(), { credentials: 'same-origin' })
+            .then(function (response) { return response.ok ? response.json() : []; })
+            .then(function (songs) {
+                songs.forEach(function (song) {
+                    if (!queue.some(function (queued) { return Number(queued.id) === Number(song.id); })) queue.push(song);
+                });
+                if (currentIndex < queue.length - 1) {
+                    saveState();
+                    renderQueue();
+                    next();
+                    showQueueToast('Smart Queue added ' + songs.length + ' tracks');
+                }
+            })
+            .catch(function () {})
+            .finally(function () { isExtendingQueue = false; });
     }
 
     function onTimeUpdate() {
@@ -192,6 +266,58 @@ var MBPlayer = (function () {
         if (seek) seek.value = pct;
         var cur = document.getElementById('playerCurrentTime');
         if (cur) cur.textContent = fmt(audio.currentTime);
+    }
+
+    function resetListeningClock() {
+        if (listeningTimer !== null) clearTimeout(listeningTimer);
+        listeningTimer = null;
+        listeningStartedAt = null;
+        listenedMilliseconds = 0;
+        historyRecorded = false;
+    }
+
+    function startListeningClock() {
+        if (historyRecorded || currentIndex < 0 || listeningStartedAt !== null) return;
+        listeningStartedAt = performance.now();
+        var remaining = Math.max(0, 5000 - listenedMilliseconds);
+        listeningTimer = window.setTimeout(function () {
+            listeningTimer = null;
+            if (audio.paused || historyRecorded) return;
+            listenedMilliseconds = 5000;
+            listeningStartedAt = null;
+            recordListeningHistory(queue[currentIndex]);
+        }, remaining);
+    }
+
+    function pauseListeningClock() {
+        if (listeningStartedAt !== null) {
+            listenedMilliseconds += performance.now() - listeningStartedAt;
+            listeningStartedAt = null;
+        }
+        if (listeningTimer !== null) {
+            clearTimeout(listeningTimer);
+            listeningTimer = null;
+        }
+    }
+
+    function recordListeningHistory(song) {
+        var songId = Number(song && song.id);
+        if (!Number.isInteger(songId) || songId <= 0) return;
+        historyRecorded = true;
+        var token = document.querySelector('#playerAntiForgeryToken input[name="__RequestVerificationToken"]');
+        if (!token) return;
+
+        fetch('/ListeningHistory/RecordPlay', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token.value
+            },
+            body: JSON.stringify({ songId: songId })
+        }).catch(function () {
+            // Playback must continue even if history logging is temporarily unavailable.
+        });
     }
 
     function onMetadata() {
@@ -207,7 +333,32 @@ var MBPlayer = (function () {
     function onVolume(e) {
         audio.volume = e.target.value / 100;
         if (audio.muted) audio.muted = false;
+        saveAudioPreferences();
         updateMuteBtn();
+    }
+
+    function restoreAudioPreferences(volumeControl) {
+        var storedVolume = null;
+        var storedMuted = false;
+        try {
+            storedVolume = localStorage.getItem('mb_volume');
+            storedMuted = localStorage.getItem('mb_muted') === '1';
+        } catch (e) {}
+
+        var volume = storedVolume === null ? 0.5 : Number(storedVolume);
+        if (!Number.isFinite(volume)) volume = 0.5;
+        volume = Math.max(0, Math.min(1, volume));
+        audio.volume = volume;
+        audio.muted = storedMuted;
+        volumeControl.value = String(Math.round(volume * 100));
+        updateMuteBtn();
+    }
+
+    function saveAudioPreferences() {
+        try {
+            localStorage.setItem('mb_volume', String(audio.volume));
+            localStorage.setItem('mb_muted', audio.muted ? '1' : '0');
+        } catch (e) {}
     }
 
     // ── UI updates ────────────────────────────────────────────────
@@ -243,6 +394,15 @@ var MBPlayer = (function () {
         if (player) player.classList.add('has-song');
     }
 
+    function ensureQueueVisibility() {
+        var player = document.getElementById('mbPlayer');
+        var toggle = document.getElementById('playerQueueToggle');
+        if (!player || !toggle) return;
+        if (!player.classList.contains('has-song')) {
+            player.classList.add('has-song');
+        }
+    }
+
     function updateNowPlayingRows(songId) {
         // Remove all active states
         document.querySelectorAll('[data-song-id]').forEach(function (el) {
@@ -266,6 +426,134 @@ var MBPlayer = (function () {
         });
     }
 
+    // Queue drawer
+    var queueDrawerTimer = null;
+
+    function toggleQueueDrawer() {
+        var drawer = document.getElementById('playerQueueDrawer');
+        var toggle = document.getElementById('playerQueueToggle');
+        if (!drawer) return;
+        var opening = !toggle || toggle.getAttribute('aria-expanded') !== 'true';
+        if (!opening) {
+            closeQueueDrawer();
+            return;
+        }
+
+        if (queueDrawerTimer) clearTimeout(queueDrawerTimer);
+        drawer.hidden = false;
+        drawer.classList.remove('is-closing');
+        renderQueue();
+        requestAnimationFrame(function () {
+            drawer.classList.add('is-open');
+        });
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeQueueDrawer() {
+        var drawer = document.getElementById('playerQueueDrawer');
+        var toggle = document.getElementById('playerQueueToggle');
+        if (drawer && !drawer.hidden) {
+            drawer.classList.remove('is-open');
+            drawer.classList.add('is-closing');
+            if (queueDrawerTimer) clearTimeout(queueDrawerTimer);
+            queueDrawerTimer = setTimeout(function () {
+                drawer.hidden = true;
+                drawer.classList.remove('is-closing');
+                queueDrawerTimer = null;
+            }, 280);
+        }
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    function clearQueue() {
+        queue = [];
+        currentIndex = -1;
+        resetListeningClock();
+        audio.pause();
+        audio.removeAttribute('src');
+        audio.load();
+        var player = document.getElementById('mbPlayer');
+        if (player) player.classList.remove('has-song');
+        var title = document.getElementById('playerTitle');
+        var artist = document.getElementById('playerArtist');
+        if (title) title.textContent = '—';
+        if (artist) artist.textContent = 'Pick a song to play';
+        saveState();
+        renderQueue();
+    }
+
+    function removeFromQueue(index) {
+        if (index < 0 || index >= queue.length) return;
+        var removingCurrent = index === currentIndex;
+        queue.splice(index, 1);
+        if (!queue.length) {
+            clearQueue();
+            return;
+        }
+        if (index < currentIndex) currentIndex--;
+        if (removingCurrent) {
+            currentIndex = Math.min(currentIndex, queue.length - 1);
+            loadAndPlay();
+        } else {
+            saveState();
+            renderQueue();
+        }
+    }
+
+    function renderQueue() {
+        var list = document.getElementById('playerQueueList');
+        var empty = document.getElementById('playerQueueEmpty');
+        var count = document.getElementById('playerQueueCount');
+        if (count) count.textContent = String(queue.length);
+        if (!list || !empty) return;
+        list.replaceChildren();
+        empty.hidden = queue.length > 0;
+
+        queue.forEach(function (song, index) {
+            var row = document.createElement('div');
+            row.className = 'player-queue-item' + (index === currentIndex ? ' current' : '');
+
+            var play = document.createElement('button');
+            play.type = 'button';
+            play.className = 'player-queue-item-play';
+            play.textContent = index === currentIndex && !audio.paused ? 'Ⅱ' : '▶';
+            play.setAttribute('aria-label', 'Play ' + song.title);
+            play.addEventListener('click', function () { currentIndex = index; loadAndPlay(); });
+
+            var meta = document.createElement('div');
+            meta.className = 'player-queue-item-meta';
+            var title = document.createElement('strong');
+            title.textContent = song.title || 'Unknown song';
+            var artist = document.createElement('span');
+            artist.textContent = song.artist || 'Unknown artist';
+            meta.append(title, artist);
+
+            var state = document.createElement('span');
+            state.className = 'player-queue-item-state';
+            state.textContent = index === currentIndex ? 'NOW' : String(index + 1).padStart(2, '0');
+
+            var remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'player-queue-item-remove';
+            remove.textContent = 'X';
+            remove.setAttribute('aria-label', 'Remove ' + song.title + ' from queue');
+            remove.addEventListener('click', function () { removeFromQueue(index); });
+
+            row.append(play, meta, state, remove);
+            list.appendChild(row);
+        });
+    }
+
+    function showQueueToast(message) {
+        var oldToast = document.querySelector('.queue-toast');
+        if (oldToast) oldToast.remove();
+        var toast = document.createElement('div');
+        toast.className = 'queue-toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        window.setTimeout(function () { toast.remove(); }, 2200);
+    }
+
     // ── Persist / restore queue ───────────────────────────────────
     function saveState() {
         try {
@@ -276,6 +564,8 @@ var MBPlayer = (function () {
 
     function restoreState() {
         try {
+            isSmartQueue = localStorage.getItem('mb_smart_queue') === '1';
+            updateSmartQueueButton();
             var VER = 'mb_v3';
             if (localStorage.getItem('mb_ver') !== VER) {
                 localStorage.removeItem('mb_queue');
@@ -335,7 +625,15 @@ var MBPlayer = (function () {
                 } catch (err) {}
             });
         });
+
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('.js-queue-btn');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            try { addToQueue(JSON.parse(btn.dataset.song)); } catch (err) {}
+        });
     });
 
-    return { init: init, playSong: playSong, setQueue: setQueue };
+    return { init: init, playSong: playSong, setQueue: setQueue, addToQueue: addToQueue };
 })();

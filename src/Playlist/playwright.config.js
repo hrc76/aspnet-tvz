@@ -22,7 +22,7 @@ module.exports = defineConfig({
     }
   ],
   webServer: remoteBaseUrl ? undefined : {
-    command: 'dotnet run --project Playlist/Playlist.csproj --no-build --launch-profile Playlist',
+    command: 'dotnet run --project Playlist/Playlist.csproj --launch-profile Playlist',
     url: 'https://localhost:7086',
     ignoreHTTPSErrors: true,
     reuseExistingServer: true,

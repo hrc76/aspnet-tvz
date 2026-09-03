@@ -90,11 +90,12 @@
                     <div class="track-catalog-stat">@song.Duration.ToString(@"m\:ss")</div>
                     <div class="track-catalog-stat">@song.PlayCount.ToString("N0")</div>
                     <div class="track-catalog-actions">
+                        <button type="button" class="queue-add-btn js-queue-btn" data-song="@songJson" title="Add @song.Title to queue">+Q</button>
                         <a asp-action="Details" asp-route-id="@song.SongId" class="track-action-link">Open</a>
                         <a asp-action="Edit" asp-route-id="@song.SongId" class="track-action-link">Edit</a>
                         <form asp-action="Delete" asp-route-id="@song.SongId" method="post" class="inline-form">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="track-delete-link"
+                            <button type="submit" class="mb-btn mb-btn-danger btn-sm"
                                     onclick="return confirm('Delete \'@song.Title\'?')">Delete</button>
                         </form>
                     </div>

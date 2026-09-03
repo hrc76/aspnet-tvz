@@ -42,6 +42,24 @@ namespace Playlist.Repositories
                 .ToList();
         }
 
+        public List<Song> GetSmartQueue(int seedSongId, IReadOnlyCollection<int> excludedSongIds, int count = 5)
+        {
+            var seed = _context.Songs.AsNoTracking().FirstOrDefault(song => song.SongId == seedSongId);
+            if (seed == null) return new List<Song>();
+
+            return _context.Songs.AsNoTracking()
+                .Include(song => song.Artist)
+                .Include(song => song.Album)
+                .Include(song => song.Genre)
+                .Where(song => song.SongId != seedSongId && !excludedSongIds.Contains(song.SongId))
+                .OrderByDescending(song => (song.GenreId == seed.GenreId ? 4 : 0)
+                    + (song.Mood == seed.Mood ? 2 : 0)
+                    + (song.ArtistId == seed.ArtistId ? 1 : 0))
+                .ThenByDescending(song => song.PopularityScore)
+                .Take(count)
+                .ToList();
+        }
+
         public void Add(Song song)
         {
             song.SongId = _context.Songs.Any() ? _context.Songs.Max(s => s.SongId) + 1 : 1;

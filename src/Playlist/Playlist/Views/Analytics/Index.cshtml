@@ -1,0 +1,96 @@
+@model global::Playlist.ViewModels.ListeningAnalyticsViewModel
+@{ ViewData["Title"] = "Listening Analytics"; }
+
+<div class="analytics-page">
+    <section class="analytics-hero">
+        <div>
+            <p class="mb-eyebrow">@(Model.IsGlobal ? $"Global player data // {Model.ProfileCount} profiles" : "Player data // your history")</p>
+            <h1>@(Model.IsGlobal ? "MusicBar listening" : "Your listening")<br />decoded.</h1>
+            <p>@(Model.IsGlobal ? "A combined snapshot of listening across all MusicBar profiles." : "A live snapshot built from the tracks you actually played for at least five seconds.")</p>
+        </div>
+        <div class="analytics-signal" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+    </section>
+
+    @if (Model.TotalPlays == 0)
+    {
+        <section class="analytics-empty">
+            <strong>NO SIGNAL YET</strong>
+            <p>Play a few tracks for at least five seconds and your dashboard will appear here.</p>
+            <a asp-controller="Discover" asp-action="Index" class="mb-btn mb-btn-primary">Discover music</a>
+        </section>
+    }
+    else
+    {
+        <section class="analytics-stats">
+            <article><span>PLAYS</span><strong>@Model.TotalPlays</strong><small>qualified sessions</small></article>
+            <article><span>TRACKS</span><strong>@Model.UniqueSongs</strong><small>unique discoveries</small></article>
+            <article><span>MINUTES</span><strong>@Model.ListeningMinutes</strong><small>estimated listening</small></article>
+            <article><span>STREAK</span><strong>@Model.ListeningStreak</strong><small>active days</small></article>
+            <article><span>PEAK MODE</span><strong class="analytics-text-stat">@Model.PeakListeningTime</strong><small>favorite time</small></article>
+        </section>
+
+        <section class="analytics-grid">
+            <article class="analytics-panel analytics-week">
+                <header><div><p class="mb-eyebrow">Last 7 days</p><h2>Activity signal</h2></div><span>LIVE</span></header>
+                <div class="analytics-day-chart">
+                    @foreach (var day in Model.LastSevenDays)
+                    {
+                        <div class="analytics-day" title="@day.Plays plays">
+                            <strong>@day.Plays</strong>
+                            <div><i style="--level:@day.Percentage%"></i></div>
+                            <span>@day.Label</span>
+                        </div>
+                    }
+                </div>
+            </article>
+
+            <article class="analytics-panel">
+                <header><div><p class="mb-eyebrow">Frequency</p><h2>Top genres</h2></div><span>GENRE.DAT</span></header>
+                <div class="analytics-bars">
+                    @foreach (var genre in Model.Genres)
+                    {
+                        <div class="analytics-bar"><div><strong>@genre.Name</strong><span>@genre.Plays plays // @genre.Percentage%</span></div><i style="--level:@genre.Percentage%"></i></div>
+                    }
+                </div>
+            </article>
+
+            <article class="analytics-panel">
+                <header><div><p class="mb-eyebrow">Rotation</p><h2>Top tracks</h2></div><span>TOP.05</span></header>
+                <ol class="analytics-ranking">
+                    @foreach (var song in Model.TopSongs)
+                    {
+                        <li>
+                            <span class="analytics-rank">@((Model.TopSongs.IndexOf(song) + 1).ToString("00"))</span>
+                            <span class="analytics-rank-cover">
+                                @if (!string.IsNullOrWhiteSpace(song.ImageUrl)) { <img src="@song.ImageUrl" alt="" loading="lazy" /> }
+                                else { @song.Name.Substring(0, 1).ToUpper() }
+                            </span>
+                            <span><strong>@song.Name</strong><small>@song.Subtitle</small></span>
+                            <b>@song.Plays×</b>
+                        </li>
+                    }
+                </ol>
+            </article>
+
+            <article class="analytics-panel">
+                <header><div><p class="mb-eyebrow">Artists</p><h2>Most played</h2></div><span>ARTIST.SYS</span></header>
+                <ol class="analytics-ranking analytics-artist-ranking">
+                    @foreach (var artist in Model.TopArtists)
+                    {
+                        <li><span class="analytics-rank">@((Model.TopArtists.IndexOf(artist) + 1).ToString("00"))</span><span><strong>@artist.Name</strong><small>@artist.Subtitle</small></span><b>@artist.Plays×</b></li>
+                    }
+                </ol>
+            </article>
+
+            <article class="analytics-panel analytics-moods">
+                <header><div><p class="mb-eyebrow">Current state</p><h2>Mood matrix</h2></div><span>MOOD.EXE</span></header>
+                <div class="analytics-mood-grid">
+                    @foreach (var mood in Model.Moods)
+                    {
+                        <div style="--level:@mood.Percentage%"><strong>@mood.Name</strong><span>@mood.Percentage%</span><i></i></div>
+                    }
+                </div>
+            </article>
+        </section>
+    }
+</div>

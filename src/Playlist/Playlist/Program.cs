@@ -12,6 +12,8 @@ using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Azure App Service ima trajni HOME/data direktorij. Lokalno koristimo App_Data/wwwroot,
+// pa uploadi, logovi i kljucevi za login prezive restart Azure instance.
 var azureHome = Environment.GetEnvironmentVariable("HOME");
 var isAzure = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID"));
 var dataRoot = builder.Configuration["Storage:RootPath"];
@@ -36,7 +38,8 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(dataRoot, "keys")))
     .SetApplicationName("MusicBar");
 
-// Add services to the container.
+// Dvije baze/logicka konteksta koriste isti SQL connection string:
+// MusicBarDbContext je katalog, a ApplicationDbContext je ASP.NET Identity login.
 builder.Services.AddDbContext<MusicBarDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MusicBarDbContext")));
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -61,6 +64,8 @@ var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
 var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
 if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
 {
+    // Google login se registrira samo kada su oba podatka konfigurirana.
+    // Zato aplikacija i bez Google kljuceva i dalje normalno podrzava lokalni login.
     authBuilder.AddGoogle(options =>
     {
         options.ClientId = googleClientId;
@@ -75,6 +80,7 @@ builder.Services.AddScoped<GenreRepository>();
 builder.Services.AddScoped<PlaylistRepository>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<ListeningHistoryRepository>();
+builder.Services.AddScoped<AchievementService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddSingleton<SongMockRepository>();
@@ -88,20 +94,16 @@ builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<FavoriteSongRepository>();
 builder.Services.AddScoped<SavedAlbumRepository>();
-builder.Services.AddHttpClient<IAiMusicImportService, OpenAiMusicImportService>(client =>
+builder.Services.AddHttpClient<IAiDjService, OpenAiDjService>(client =>
 {
     client.BaseAddress = new Uri("https://api.openai.com/v1/");
     client.Timeout = TimeSpan.FromSeconds(30);
 });
-builder.Services.AddHttpClient<IMusicMetadataService, MusicBrainzMetadataService>(client =>
-{
-    client.BaseAddress = new Uri("https://musicbrainz.org/ws/2/");
-    client.DefaultRequestHeaders.UserAgent.ParseAdd("MusicBar/1.0 (student-project; contact: admin@musicbar.local)");
-    client.Timeout = TimeSpan.FromSeconds(15);
-});
 
 var app = builder.Build();
 
+// Startup priprema obje baze prije nego aplikacija pocne primati zahtjeve.
+// Metode su idempotentne: mogu se ponoviti bez dupliciranja osnovnih podataka.
 using (var scope = app.Services.CreateScope())
 {
     var musicContext = scope.ServiceProvider.GetRequiredService<MusicBarDbContext>();
@@ -160,6 +162,8 @@ app.MapGet("/health", async (MusicBarDbContext dbContext) =>
         ? Results.Ok(new { status = "healthy" })
         : Results.Problem(statusCode: 503, title: "Database unavailable"));
 
+// Primjeri LINQ upita iz laboratorijskih vjezbi. Ispisuju se samo u konzolu
+// i ne mijenjaju podatke koji se koriste u web-aplikaciji.
 var data = DataSeeder.Seed();
 
 var allSongs = data.Songs;
@@ -275,6 +279,7 @@ static async Task EnsureRoleAsync(IServiceProvider services, string roleName)
 
 static async Task EnsureIdentityDataAsync(IServiceProvider serviceProvider)
 {
+    // Kreira demonstracijske role/racune samo ako jos ne postoje.
     var userManager = serviceProvider.GetRequiredService<UserManager<AppUser>>();
     await EnsureRoleAsync(serviceProvider, "Admin");
     await EnsureRoleAsync(serviceProvider, "Manager");
@@ -355,6 +360,7 @@ static async Task EnsureIdentityDataAsync(IServiceProvider serviceProvider)
 
 static void EnsureGenreCatalog(MusicBarDbContext context)
 {
+    // Nadopunjuje padajuci izbornik standardnim zanrovima bez brisanja postojecih.
     var standardGenres = new[]
     {
         "Unknown", "Pop", "Rock", "Alternative Rock", "Indie", "Grunge", "Punk",
@@ -385,6 +391,8 @@ static async Task EnsureDomainUserAsync(
     string email,
     string username)
 {
+    // Identity korisnik sluzi za prijavu, a domenski User za playliste/history.
+    // Email je veza izmedu ta dva modela.
     var musicContext = serviceProvider.GetRequiredService<MusicBarDbContext>();
     var domainUser = await musicContext.Users.FirstOrDefaultAsync(user => user.Email == email);
     if (domainUser != null)

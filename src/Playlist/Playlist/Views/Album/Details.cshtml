@@ -111,6 +111,8 @@
 
                     <span class="track-duration">@song.Duration</span>
 
+                    <button type="button" class="queue-add-btn js-queue-btn" data-song="@sj" title="Add @song.Title to queue">+Q</button>
+
                     <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId"
                        class="mb-btn mb-btn-ghost btn-sm track-details-link">Details</a>
                 </article>

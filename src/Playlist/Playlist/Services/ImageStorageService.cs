@@ -15,6 +15,7 @@ public sealed class ImageStorageService : IImageStorageService
 {
     private const long MaxFileSize = 5 * 1024 * 1024;
 
+    // Ekstenzija i MIME tip moraju se slagati, a nize se provjerava i binarni potpis.
     private static readonly IReadOnlyDictionary<string, string> AllowedImages =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -61,6 +62,7 @@ public sealed class ImageStorageService : IImageStorageService
             await image.CopyToAsync(stream, cancellationToken);
         }
 
+        // Staru sliku brisemo tek nakon sto je nova uspjesno spremljena.
         Delete(previousImageUrl, folder);
         return $"/uploads/{folder}/{fileName}";
     }

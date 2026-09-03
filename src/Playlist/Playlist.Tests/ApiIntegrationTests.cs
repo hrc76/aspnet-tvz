@@ -10,6 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Playlist.Models;
 using Playlist.ViewModels;
 using Playlist.ViewModels.Api;
+using Playlist.Services;
+using Playlist.Repositories;
 using Xunit;
 
 namespace Playlist.Tests;
@@ -91,19 +93,19 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         results.Should().BeEmpty();
     }
 
-    // Admin mora moci otvoriti AI Import stranicu.
+    // Prijavljeni korisnik mora moci otvoriti novu AI DJ stranicu.
     [Fact]
-    public async Task AiImportPage_LoadsForAdmin()
+    public async Task AiDjPage_LoadsForAuthenticatedUser()
     {
-        var response = await _factory.CreateClient().GetAsync("/AiImport");
+        var response = await _factory.CreateClient().GetAsync("/AiDj");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        (await response.Content.ReadAsStringAsync()).Should().Contain("AI Music Import");
+        (await response.Content.ReadAsStringAsync()).Should().Contain("AI DJ");
     }
 
-    // Neprijavljeni korisnik ne smije otvoriti AI Import.
+    // Neprijavljeni korisnik ne smije otvoriti personalizirani AI DJ.
     [Fact]
-    public async Task AiImportPage_RequiresAuthentication()
+    public async Task AiDjPage_RequiresAuthentication()
     {
         var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
         {
@@ -111,9 +113,37 @@ public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         });
         client.DefaultRequestHeaders.Add("X-Test-Auth", "none");
 
-        var response = await client.GetAsync("/AiImport");
+        var response = await client.GetAsync("/AiDj");
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    // Smart Queue mora vratiti nove pjesme koje nisu vec u trenutnom redu.
+    [Fact]
+    public async Task SmartQueue_ReturnsRelatedSongs_WithoutExcludedItems()
+    {
+        var songs = await _factory.CreateClient()
+            .GetFromJsonAsync<List<SongDto>>("/Song/SmartQueue?seedSongId=22&excludeIds=22&excludeIds=21");
+
+        songs.Should().NotBeNullOrEmpty();
+        songs!.Should().NotContain(song => song.SongId == 22 || song.SongId == 21);
+        Assert.InRange(songs!.Count, 1, 5);
+    }
+
+    // Demo korisnik mora imati podatke iz kojih se racunaju otkljucani i zakljucani achievementi.
+    [Fact]
+    public async Task Achievements_AreCalculatedFromListeningData()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserRepository>();
+        var service = scope.ServiceProvider.GetRequiredService<AchievementService>();
+        var hrc = users.GetByEmail("hrc@gmail.com");
+
+        hrc.Should().NotBeNull();
+        var achievements = await service.GetForUserAsync(hrc!.UserId);
+        achievements.Should().HaveCount(9);
+        achievements.Should().Contain(item => item.Code == "FIRST.BEAT" && item.IsUnlocked);
+        achievements.Should().Contain(item => !item.IsUnlocked);
     }
 
     // Provjerava da je manager automatski dodan u MusicBar korisnike.

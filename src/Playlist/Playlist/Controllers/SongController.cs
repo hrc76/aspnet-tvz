@@ -82,6 +82,20 @@ namespace Playlist.Controllers
             return Json(result);
         }
 
+        [HttpGet]
+        public IActionResult SmartQueue(int seedSongId, [FromQuery] int[] excludeIds)
+        {
+            var songs = _songRepository.GetSmartQueue(seedSongId, excludeIds ?? Array.Empty<int>());
+            return Json(songs.Select(song => new
+            {
+                id = song.SongId,
+                title = song.Title,
+                artist = song.Artist.StageName,
+                audioUrl = song.AudioUrl ?? string.Empty,
+                coverColor = "#ff8a1f"
+            }));
+        }
+
         [Authorize(Roles = "Admin,Manager")]
         public IActionResult Create()
         {

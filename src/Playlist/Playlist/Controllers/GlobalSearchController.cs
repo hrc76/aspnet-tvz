@@ -8,6 +8,7 @@ namespace Playlist.Controllers;
 [Route("global-search")]
 public sealed class GlobalSearchController : ControllerBase
 {
+    // Staticke stranice nemaju zapis u bazi, zato su navedene kao mali interni indeks.
     private static readonly GlobalSearchResult[] Pages =
     {
         Page("Page", "Home", "Application dashboard", "/"),
@@ -38,6 +39,8 @@ public sealed class GlobalSearchController : ControllerBase
             return Ok(Array.Empty<GlobalSearchResult>());
         }
 
+        // Svaka kategorija daje najvise cetiri rezultata, a konacni odgovor najvise 20.
+        // AsNoTracking ubrzava upite jer rezultate pretrage nikada ne mijenjamo.
         var pageResults = Pages
             .Where(page => page.Title.Contains(term, StringComparison.OrdinalIgnoreCase)
                 || page.Subtitle.Contains(term, StringComparison.OrdinalIgnoreCase))

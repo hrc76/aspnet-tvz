@@ -112,6 +112,8 @@
 
                     <span class="track-duration">@song.Duration</span>
 
+                    <button type="button" class="queue-add-btn js-queue-btn" data-song="@SongJson(song)" title="Add @song.Title to queue">+Q</button>
+
                     @if (ViewBag.CanManage == true)
                     {
                     <form asp-controller="Playlist" asp-action="RemoveSong" method="post">

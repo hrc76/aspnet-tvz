@@ -5,6 +5,8 @@
     ViewData["Title"] = "Account";
     var profileImageUrl = ViewBag.ProfileImageUrl as string;
     var profileMessage = ViewBag.ProfileMessage as string;
+    var achievements = ViewBag.Achievements as List<global::Playlist.ViewModels.AchievementViewModel>
+        ?? new List<global::Playlist.ViewModels.AchievementViewModel>();
 
     string SongJson(Song s) => JsonSerializer.Serialize(new {
         id         = s.SongId,
@@ -75,6 +77,36 @@
     <div class="profile-message">@profileMessage</div>
 }
 
+<section class="profile-achievements mb-section">
+    <div class="mb-section-header">
+        <div>
+            <p class="mb-eyebrow">Listener milestones</p>
+            <h2>Achievements</h2>
+        </div>
+        <a asp-controller="Analytics" asp-action="Index" class="mb-btn mb-btn-ghost">View analytics</a>
+    </div>
+    <div class="achievement-summary">
+        <strong>@achievements.Count(item => item.IsUnlocked)/@achievements.Count</strong>
+        <span>unlocked</span>
+        <i style="--level:@(achievements.Count == 0 ? 0 : achievements.Count(item => item.IsUnlocked) * 100 / achievements.Count)%"></i>
+    </div>
+    <div class="achievement-grid">
+        @foreach (var achievement in achievements.OrderByDescending(item => item.IsUnlocked))
+        {
+            <article class="achievement-card @(achievement.IsUnlocked ? "unlocked" : "locked")">
+                <div class="achievement-icon">@achievement.Icon</div>
+                <div class="achievement-copy">
+                    <span>@achievement.Code</span>
+                    <h3>@achievement.Name</h3>
+                    <p>@achievement.Description</p>
+                    <div class="achievement-progress"><i style="--level:@achievement.Percentage%"></i></div>
+                    <small>@achievement.Progress / @achievement.Target @(achievement.IsUnlocked ? "// UNLOCKED" : "// LOCKED")</small>
+                </div>
+            </article>
+        }
+    </div>
+</section>
+
 <section class="mb-section">
     <div class="mb-section-header">
         <div>
@@ -141,6 +173,7 @@
                         <p>@history.Song.Artist.StageName · listened @history.ListenedAt</p>
                     </div>
                     <span class="track-duration">@history.Repeats× played</span>
+                    <button type="button" class="queue-add-btn js-queue-btn" data-song="@SongJson(history.Song)" title="Add @history.Song.Title to queue">+Q</button>
                 </article>
             }
         </div>

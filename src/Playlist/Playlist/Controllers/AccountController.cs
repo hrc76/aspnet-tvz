@@ -17,19 +17,22 @@ namespace Playlist.Controllers
         private readonly UserRepository _userRepository;
         private readonly IConfiguration _configuration;
         private readonly FileStorageOptions _storage;
+        private readonly AchievementService _achievementService;
 
         public AccountController(
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
             UserRepository userRepository,
             IConfiguration configuration,
-            FileStorageOptions storage)
+            FileStorageOptions storage,
+            AchievementService achievementService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _userRepository = userRepository;
             _configuration = configuration;
             _storage = storage;
+            _achievementService = achievementService;
         }
 
         [HttpGet]
@@ -222,6 +225,7 @@ namespace Playlist.Controllers
 
             ViewBag.ProfileImageUrl = appUser.ProfileImageUrl;
             ViewBag.ProfileMessage = TempData["ProfileMessage"];
+            ViewBag.Achievements = await _achievementService.GetForUserAsync(domainUser.UserId);
             return View(domainUser);
         }
 

@@ -86,6 +86,7 @@
                         <p>@song.Artist?.StageName · @song.Genre?.Name · @song.Duration</p>
                     </div>
                     <span class="mb-song-row-stat">@song.PlayCount plays</span>
+                    <button type="button" class="queue-add-btn js-queue-btn" data-song="@sj" title="Add @song.Title to queue">+Q</button>
                     <a asp-controller="Song" asp-action="Details" asp-route-id="@song.SongId" class="mb-btn mb-btn-ghost btn-sm">Details</a>
                 </article>
             }
@@ -120,7 +121,7 @@
     </div>
 </section>
 
-<section class="mb-section mb-split">
+<section class="mb-section mb-split mb-home-browser">
     <div>
         <div class="mb-section-header">
             <div>
@@ -132,12 +133,17 @@
         <div class="mb-mini-grid">
             @if (featuredArtists != null)
             {
-                foreach (var artist in featuredArtists)
+                for (var artistIndex = 0; artistIndex < featuredArtists.Count; artistIndex++)
                 {
-                    <a asp-controller="Artist" asp-action="Details" asp-route-id="@artist.ArtistId" class="mb-mini-card">
-                        <span class="mini-card-avatar">@artist.StageName.Substring(0, 1).ToUpper()</span>
-                        <h3>@artist.StageName</h3>
-                        <p>@artist.Country</p>
+                    var artist = featuredArtists[artistIndex];
+                    <a asp-controller="Artist" asp-action="Details" asp-route-id="@artist.ArtistId" class="mb-mini-card home-artist-card">
+                        <span class="home-card-index">ART.@((artistIndex + 1).ToString("00"))</span>
+                        <span class="mini-card-avatar"><i></i>@artist.StageName.Substring(0, 1).ToUpper()</span>
+                        <span class="home-artist-copy">
+                            <h3>@artist.StageName</h3>
+                            <p>@artist.Country // @(artist.IsActive ? "ACTIVE" : "ARCHIVE")</p>
+                        </span>
+                        <span class="home-card-arrow">&gt;</span>
                     </a>
                 }
             }
@@ -155,10 +161,14 @@
         <div class="mb-genre-stack">
             @if (featuredGenres != null)
             {
-                foreach (var genre in featuredGenres)
+                for (var genreIndex = 0; genreIndex < featuredGenres.Count; genreIndex++)
                 {
-                    <a asp-controller="Genre" asp-action="Details" asp-route-id="@genre.GenreId" class="mb-genre-pill">
-                        @genre.Name
+                    var genre = featuredGenres[genreIndex];
+                    <a asp-controller="Genre" asp-action="Details" asp-route-id="@genre.GenreId" class="mb-genre-pill home-genre-card">
+                        <span class="home-genre-code">G@((genreIndex + 1).ToString("00"))</span>
+                        <span class="home-genre-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+                        <strong>@genre.Name</strong>
+                        <span class="home-genre-open">LOAD &gt;</span>
                     </a>
                 }
             }

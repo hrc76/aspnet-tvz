@@ -73,6 +73,7 @@
                         <p>@song.Artist.StageName · @song.Genre.Name · @song.Duration</p>
                     </div>
                     <span class="track-duration">@song.PlayCount plays</span>
+                    <button type="button" class="queue-add-btn js-queue-btn" data-song="@SongJson(song)" title="Add @song.Title to queue">+Q</button>
                 </article>
             }
         </div>
