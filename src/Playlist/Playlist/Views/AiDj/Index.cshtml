@@ -128,7 +128,13 @@
                 {
                     <input type="hidden" name="SongIds" value="@songId" data-ai-song-input="@songId" />
                 }
-                <p class="form-section-label">Save this session</p>
+                <div class="ai-dj-save-heading">
+                    <div class="ai-pixel-save-icon" aria-hidden="true">+</div>
+                    <div>
+                        <p class="form-section-label">Save this session</p>
+                        <span>Keep the mix in your MusicBar library.</span>
+                    </div>
+                </div>
                 <div class="form-row-2">
                     <div class="form-group">
                         <label for="PlaylistName">Playlist name</label>
@@ -139,8 +145,10 @@
                         <input id="Description" name="Description" value="@Model.Recommendation.Description" class="mb-input" maxlength="250" />
                     </div>
                 </div>
-                <label class="mb-checkbox"><input type="checkbox" name="IsPublic" value="true" /><span>Make playlist public</span></label>
-                <button type="submit" class="mb-btn mb-btn-secondary js-ai-save-mix">Save as playlist</button>
+                <div class="ai-dj-save-actions">
+                    <label class="mb-checkbox"><input type="checkbox" name="IsPublic" value="true" /><span>Make playlist public</span></label>
+                    <button type="submit" class="mb-btn mb-btn-secondary js-ai-save-mix">+ Save playlist</button>
+                </div>
             </form>
         </section>
     }
