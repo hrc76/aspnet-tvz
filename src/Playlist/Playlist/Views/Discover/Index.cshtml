@@ -149,12 +149,19 @@
     <div class="mb-mini-grid discover-artists">
         @if (artists != null)
         {
-            foreach (var artist in artists)
+            for (var artistIndex = 0; artistIndex < artists.Count; artistIndex++)
             {
-                <a asp-controller="Artist" asp-action="Details" asp-route-id="@artist.ArtistId" class="mb-mini-card">
+                var artist = artists[artistIndex];
+                <a asp-controller="Artist" asp-action="Details" asp-route-id="@artist.ArtistId" class="mb-mini-card discover-artist-card">
+                    <span class="discover-artist-code">ART.@((artistIndex + 1).ToString("00"))</span>
                     <span class="mini-card-avatar">@artist.StageName.Substring(0, 1).ToUpper()</span>
-                    <h3>@artist.StageName</h3>
-                    <p>@artist.Country · @(artist.IsActive ? "Active" : "Inactive")</p>
+                    <span class="discover-artist-copy">
+                        <h3>@artist.StageName</h3>
+                        <p>@artist.Country</p>
+                    </span>
+                    <span class="discover-artist-status @(artist.IsActive ? "is-active" : "is-inactive")">
+                        @(artist.IsActive ? "ON" : "OFF")
+                    </span>
                 </a>
             }
         }

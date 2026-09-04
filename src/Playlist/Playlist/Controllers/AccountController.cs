@@ -346,6 +346,35 @@ namespace Playlist.Controllers
             TempData["ProfileMessage"] = "Profile image updated.";
             return RedirectToAction(nameof(Profile));
         }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveProfileImage()
+        {
+            var appUser = await _userManager.GetUserAsync(User);
+            if (appUser == null) return RedirectToAction(nameof(Login));
+            if (string.IsNullOrWhiteSpace(appUser.ProfileImageUrl)) return RedirectToAction(nameof(Profile));
+
+            var oldProfileImageUrl = appUser.ProfileImageUrl;
+            appUser.ProfileImageUrl = null;
+            var updateResult = await _userManager.UpdateAsync(appUser);
+            if (!updateResult.Succeeded)
+            {
+                TempData["ProfileMessage"] = "The profile image could not be removed.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var expectedPrefix = "/uploads/profile-images/";
+            if (oldProfileImageUrl.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                var oldFilePath = Path.Combine(_storage.UploadsRoot, "profile-images", Path.GetFileName(oldProfileImageUrl));
+                if (System.IO.File.Exists(oldFilePath)) System.IO.File.Delete(oldFilePath);
+            }
+
+            TempData["ProfileMessage"] = "Profile image removed.";
+            return RedirectToAction(nameof(Profile));
+        }
     }
 
     public class LoginViewModel

@@ -152,6 +152,41 @@ $(function () {
         });
     }
 
+    // Zajednicki preview za profilne, albumske i playlist slike prije uploada.
+    document.querySelectorAll('.js-image-upload').forEach(function (field) {
+        var input = field.querySelector('[data-image-input]');
+        var shell = field.querySelector('[data-image-preview-shell]');
+        var preview = field.querySelector('[data-image-preview]');
+        var removeButton = field.querySelector('[data-image-remove]');
+        var removeInput = field.querySelector('[data-remove-image-input]');
+        var label = field.querySelector('.image-preview-label');
+        var objectUrl = null;
+        if (!input || !shell || !preview || !removeButton) return;
+
+        input.addEventListener('change', function () {
+            var file = input.files && input.files[0];
+            if (!file) return;
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+            objectUrl = URL.createObjectURL(file);
+            preview.src = objectUrl;
+            shell.hidden = false;
+            shell.classList.remove('is-empty');
+            if (removeInput) removeInput.value = 'false';
+            if (label) label.textContent = 'SELECTED // ' + file.name;
+        });
+
+        removeButton.addEventListener('click', function () {
+            input.value = '';
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+            preview.removeAttribute('src');
+            shell.hidden = true;
+            shell.classList.add('is-empty');
+            if (removeInput) removeInput.value = 'true';
+            if (label) label.textContent = removeInput ? 'REMOVED ON SAVE' : 'READY TO UPLOAD';
+        });
+    });
+
 });
 
 // ── Album art: dynamically load covers from iTunes Search API ────

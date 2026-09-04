@@ -223,6 +223,7 @@ var MBPlayer = (function () {
     }
 
     function toggleSmartQueue() {
+        // Smart Queue po potrebi trazi slicne pjesme od servera kada dode do kraja reda.
         isSmartQueue = !isSmartQueue;
         try { localStorage.setItem('mb_smart_queue', isSmartQueue ? '1' : '0'); } catch (e) {}
         updateSmartQueueButton();
@@ -269,6 +270,7 @@ var MBPlayer = (function () {
     }
 
     function resetListeningClock() {
+        // Svaka nova pjesma dobiva vlastiti brojac; pauza ne smije glumiti slusanje.
         if (listeningTimer !== null) clearTimeout(listeningTimer);
         listeningTimer = null;
         listeningStartedAt = null;
@@ -277,6 +279,7 @@ var MBPlayer = (function () {
     }
 
     function startListeningClock() {
+        // History se biljezi tek nakon ukupno pet stvarnih sekundi reprodukcije.
         if (historyRecorded || currentIndex < 0 || listeningStartedAt !== null) return;
         listeningStartedAt = performance.now();
         var remaining = Math.max(0, 5000 - listenedMilliseconds);
@@ -338,6 +341,7 @@ var MBPlayer = (function () {
     }
 
     function restoreAudioPreferences(volumeControl) {
+        // localStorage pripada browseru pa glasnoca ostaje ista nakon navigacije/refresha.
         var storedVolume = null;
         var storedMuted = false;
         try {
@@ -554,7 +558,7 @@ var MBPlayer = (function () {
         window.setTimeout(function () { toast.remove(); }, 2200);
     }
 
-    // ── Persist / restore queue ───────────────────────────────────
+    // Queue se sprema lokalno kako promjena Razor stranice ne bi obrisala red pjesama.
     function saveState() {
         try {
             localStorage.setItem('mb_queue', JSON.stringify(queue));

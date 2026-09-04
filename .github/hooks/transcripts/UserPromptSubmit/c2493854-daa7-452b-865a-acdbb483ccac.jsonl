@@ -1,0 +1,2 @@
+{"type":"session.start","data":{"sessionId":"c2493854-daa7-452b-865a-acdbb483ccac","version":1,"producer":"copilot-agent","copilotVersion":"0.64.1","vscodeVersion":"1.136.1","startTime":"2026-09-04T12:26:17.311Z"},"id":"5c91c72f-1bb2-433c-a017-3ce3f0751481","timestamp":"2026-09-04T12:26:17.311Z","parentId":null}
+{"type":"user.message","data":{"content":"Use the MusicBar MCP tools to find Nirvana and list matching songs.","attachments":[]},"id":"cde32134-456c-412e-9b25-ee887e6b706e","timestamp":"2026-09-04T12:26:18.178Z","parentId":"5c91c72f-1bb2-433c-a017-3ce3f0751481"}

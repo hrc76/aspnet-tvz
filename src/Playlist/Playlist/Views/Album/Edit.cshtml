@@ -74,14 +74,16 @@
         </div>
     </div>
 
-    <div class="form-group image-upload-field">
+    <div class="form-group image-upload-field js-image-upload">
         <label for="coverImage">Album cover</label>
-        @if (!string.IsNullOrWhiteSpace(Model.CoverUrl))
-        {
-            <img src="@Model.CoverUrl" class="image-upload-preview" alt="Current album cover" />
-        }
+        <input type="hidden" name="removeCoverImage" value="false" data-remove-image-input />
+        <div class="image-upload-preview-shell @(string.IsNullOrWhiteSpace(Model.CoverUrl) ? "is-empty" : "")" data-image-preview-shell>
+            <img src="@Model.CoverUrl" class="image-upload-preview" data-image-preview alt="Album cover preview" />
+            <button type="button" class="image-remove-button" data-image-remove aria-label="Remove album cover" title="Remove image">X</button>
+            <span class="image-preview-label">@(string.IsNullOrWhiteSpace(Model.CoverUrl) ? "READY TO UPLOAD" : "CURRENT IMAGE")</span>
+        </div>
         <input id="coverImage" name="coverImage" type="file"
-               accept="image/jpeg,image/png,image/webp" class="mb-input" />
+               accept="image/jpeg,image/png,image/webp" class="mb-input" data-image-input />
         <span class="text-danger">@Html.ValidationMessage("coverImage")</span>
         <small>Leave empty to keep the current image. JPG, PNG or WebP, maximum 5 MB.</small>
     </div>

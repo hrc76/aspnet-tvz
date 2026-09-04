@@ -205,7 +205,7 @@ namespace Playlist.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Playlist.Models.Playlist playlist, IFormFile? coverImage)
+        public async Task<IActionResult> Edit(int id, Playlist.Models.Playlist playlist, IFormFile? coverImage, bool removeCoverImage = false)
         {
             if (id != playlist.PlaylistId)
             {
@@ -242,6 +242,11 @@ namespace Playlist.Controllers
                     ModelState.AddModelError("coverImage", exception.Message);
                     return View(playlist);
                 }
+            }
+            else if (removeCoverImage)
+            {
+                _imageStorage.Delete(existing.CoverImageUrl, "playlist-covers");
+                coverImageUrl = null;
             }
 
             _playlistRepository.UpdateBasicInfo(

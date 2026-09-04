@@ -19,23 +19,38 @@
 
 <section class="artist-profile-hero account-profile-hero">
     <div class="profile-avatar-panel">
-        <div class="artist-avatar profile-avatar">
+        <div class="profile-avatar-wrap">
+            <div class="artist-avatar profile-avatar">
+                @if (!string.IsNullOrWhiteSpace(profileImageUrl))
+                {
+                    <img src="@profileImageUrl" alt="@Model.Username profile image" />
+                }
+                else
+                {
+                    <span>@Model.Username.Substring(0, 1).ToUpper()</span>
+                }
+            </div>
             @if (!string.IsNullOrWhiteSpace(profileImageUrl))
             {
-                <img src="@profileImageUrl" alt="@Model.Username profile image" />
-            }
-            else
-            {
-                <span>@Model.Username.Substring(0, 1).ToUpper()</span>
+                <form asp-action="RemoveProfileImage" method="post" class="profile-current-image-remove"
+                      onsubmit="return confirm('Remove your profile image?');">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="image-remove-button" aria-label="Remove current profile image" title="Remove image">X</button>
+                </form>
             }
         </div>
-        <form asp-action="UploadProfileImage" method="post" enctype="multipart/form-data" class="profile-image-form">
+        <form asp-action="UploadProfileImage" method="post" enctype="multipart/form-data" class="profile-image-form js-image-upload">
             @Html.AntiForgeryToken()
             <label class="profile-image-picker">
-                <input type="file" name="profileImage" accept="image/jpeg,image/png,image/webp" />
+                <input type="file" name="profileImage" accept="image/jpeg,image/png,image/webp" data-image-input />
                 <span>Choose image</span>
             </label>
             <button type="submit" class="mb-btn mb-btn-secondary btn-sm">Upload</button>
+            <div class="image-upload-preview-shell pending-image-preview" data-image-preview-shell hidden>
+                <img class="image-upload-preview" data-image-preview alt="Selected profile image preview" />
+                <button type="button" class="image-remove-button" data-image-remove aria-label="Cancel selected image" title="Cancel selection">X</button>
+                <span class="image-preview-label">READY TO UPLOAD</span>
+            </div>
         </form>
         <small>JPG, PNG or WebP, up to 5 MB.</small>
     </div>

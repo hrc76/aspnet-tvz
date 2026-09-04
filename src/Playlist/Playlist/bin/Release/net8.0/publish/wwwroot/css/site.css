@@ -6455,6 +6455,41 @@ table td, table th, .table td, .table th { border-color: rgba(255, 134, 28, 0.16
   .catalog-accent-artists .artist-catalog-card:hover .artist-card-orbit { animation: none; }
 }
 
+/* Discover artist radar: compact cards that also fit long stage names */
+.discover-artists { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.discover-artists .discover-artist-card { position: relative; display: block; min-width: 0; min-height: 164px; padding: 0.85rem; overflow: hidden; border-color: #71300b; background-color: #130805; background-image: linear-gradient(rgba(255,134,28,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,134,28,.05) 1px, transparent 1px); background-size: 8px 8px; }
+.discover-artist-code { display: block; color: #8f6c54; font: 800 0.48rem var(--px-font); letter-spacing: .1em; }
+.discover-artists .mini-card-avatar { position: absolute; top: 0.85rem; right: 0.85rem; display: grid; width: 42px; height: 42px; place-items: center; background: #2b1005; color: var(--px-orange-hi); font: 900 .78rem var(--px-font); }
+.discover-artist-copy { display: block; min-width: 0; margin-top: 3.15rem; padding-right: 0.15rem; }
+.discover-artists .discover-artist-card h3 { max-width: 100%; margin: 0; overflow: hidden; color: var(--px-cream); font-size: clamp(1.12rem, 1.5vw, 1.35rem); line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; overflow-wrap: normal; word-break: normal; }
+.discover-artists .discover-artist-card p { margin: .35rem 0 0; color: #ad8e76; font: 700 .58rem var(--px-font); text-transform: uppercase; }
+.discover-artist-status { position: absolute; right: 0.85rem; bottom: 0.85rem; left: 0.85rem; padding: .28rem .34rem; border: 1px solid #6a3815; background: #140a05; color: #82644d; font: 900 .5rem var(--px-font); }
+.discover-artist-status.is-active { border-color: #397c60; color: #71d6a8; }
+.discover-artist-card::after { content: ''; position: absolute; right: 0; bottom: 0; width: 28px; height: 4px; background: repeating-linear-gradient(90deg, var(--px-orange) 0 4px, transparent 4px 7px); }
+.discover-artist-card:hover .discover-artist-status.is-active { background: #103323; animation: discoverStatusBlink 800ms steps(1) infinite; }
+@keyframes discoverStatusBlink { 50% { color: #143226; } }
+@media (max-width: 520px) {
+  .discover-artists { grid-template-columns: 1fr; }
+  .discover-artists .discover-artist-card { min-height: 154px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .discover-artist-card:hover .discover-artist-status.is-active { animation: none; }
+}
+
+/* Image preview + removal controls */
+.image-upload-preview-shell { position: relative; display: inline-grid; width: min(240px, 100%); margin: 0.85rem 0; border: 2px solid var(--px-orange); background: #0d0502; box-shadow: 5px 5px 0 #4c1601; }
+.image-upload-preview-shell[hidden], .image-upload-preview-shell.is-empty { display: none; }
+.image-upload-preview-shell .image-upload-preview { width: 100%; margin: 0; aspect-ratio: 1; border: 0; object-fit: cover; }
+.image-remove-button { display: grid; width: 30px; height: 30px; padding: 0; place-items: center; border: 2px solid #ff695b; background: #2a0b08; box-shadow: 3px 3px 0 #57150f; color: #ff9b91; font: 900 0.68rem var(--px-font); cursor: pointer; }
+.image-upload-preview-shell .image-remove-button { position: absolute; z-index: 2; top: 8px; right: 8px; }
+.image-remove-button:hover { background: #ff695b; color: #190403; transform: translate(2px, 2px); box-shadow: 1px 1px 0 #57150f; }
+.image-preview-label { overflow: hidden; padding: 0.55rem 0.65rem; border-top: 2px solid #6c2405; color: var(--px-cyan); font: 800 0.52rem var(--px-font); letter-spacing: .05em; text-overflow: ellipsis; white-space: nowrap; }
+.pending-image-preview { flex-basis: 100%; justify-self: center; }
+.profile-avatar-panel { position: relative; }
+.profile-avatar-wrap { position: relative; display: inline-block; }
+.profile-current-image-remove { position: absolute; z-index: 4; top: -7px; right: -7px; margin: 0; }
+.profile-image-form .image-upload-preview-shell { margin-right: auto; margin-left: auto; }
+
 /* Listening analytics */
 .analytics-page { display: grid; gap: 1.25rem; font-family: var(--px-font); }
 .analytics-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2rem; padding: clamp(1.6rem, 4vw, 3.2rem); border: 3px solid var(--px-orange); background-color: #1b0a03; background-image: linear-gradient(rgba(255, 134, 28, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 134, 28, 0.05) 1px, transparent 1px), linear-gradient(135deg, #241005, #0c0502); background-size: 10px 10px, 10px 10px, 100% 100%; box-shadow: 8px 8px 0 #4d1601; }

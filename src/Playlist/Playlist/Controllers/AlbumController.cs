@@ -115,7 +115,7 @@ namespace Playlist.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin,Manager")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Album album, IFormFile? coverImage)
+        public async Task<IActionResult> Edit(int id, Album album, IFormFile? coverImage, bool removeCoverImage = false)
         {
             if (id != album.AlbumId) return BadRequest();
 
@@ -148,6 +148,11 @@ namespace Playlist.Controllers
                     ViewBag.Artists = _artistRepository.GetAll();
                     return View(album);
                 }
+            }
+            else if (removeCoverImage)
+            {
+                _imageStorage.Delete(existing.CoverUrl, "album-covers");
+                album.CoverUrl = null;
             }
 
             _albumRepository.Update(album);
